@@ -19,9 +19,24 @@ void render3d::render(const vector3d &pos,const vector3d &facing,const vector3d 
     auto mid=pos+facing;
     for(int i=0;i<height;i++)
         for(int j=0;j<width;j++){
-            auto cur=mid+ud*(i-(height>>1))+ld*(j-(width>>1));
+            std::list<std::pair<double,color_t>> px;
             for(auto &f:*this){
-                //TODO:Check if pos->cur cross on f,then math the cross point
+                vector3d e1=(*f)[1]-(*f)[0],e2=(*f)[2]-(*f)[0],t,d=facing+ud*(i-(height>>1))+ld*(j-(width>>1)),p=d&e2;
+                double det=e1*p;
+                if(det>0) t=pos-(*f)[0];
+                else t=(*f)[0]-pos,det*=-1;
+                if(det<0.0001f) continue;
+                auto u=t*p;if(u<0||u>det) continue;
+                auto q=t&e1;double v=d*q;
+                if(v<0||u+v>det) continue;
+                double dt=e2*q;if(dt<0) continue;
+                px.emplace_back(dt,f->color);
+            }
+            px.sort([](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
+            color_t pxc=0;
+            for(auto &p:px){
+                putpixel_f(height-1-j,width-1-i,p.second,pimg);
+                if(EGEGET_A(p.second)==0xff) break;
             }
         }
 }
