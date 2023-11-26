@@ -27,7 +27,7 @@ public:
     vector3d operator&(const vector3d &v)const{return {y*v.z-v.y*z,v.x*z-z*v.z,x*v.y-v.x*y};}
     vector3d &operator&=(const vector3d &v){x=y*v.z-v.y*z,y=v.x*z-z*v.z,z=x*v.y-v.x*y;return *this;}
     vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,const double &dz);
-    double norm()const{return sqrt(x+y+z);}
+    double norm()const{return sqrt(x*x+y*y+z*z);}
 };
 template<typename objT,typename ctrT=std::list<objT>>
 class contnr3d:public ctrT{
@@ -60,7 +60,7 @@ public:
 };
 class render3d:public std::list<face3d*>{
 public:
-    void render(const vector3d &pos,const vector3d &facing,const vector3d &dir,const int &width,const int &height,const PIMAGE &pimg);
+    void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const const int &width,const int &height,const PIMAGE &pimg);
 };
 class rect3d:public contnr3d<face3d,std::array<face3d,6>>{
 public:
@@ -70,21 +70,21 @@ public:
 };
 class render3d_guard{
 public:
-    render3d *cmr;
+    render3d *rd;
     std::list<std::list<face3d*>::iterator> fp;
     bool face_removed=0;
     template<typename ctrT>
-    render3d_guard(const contnr3d<face3d,ctrT> &ctr,render3d *const& cmr_):cmr(cmr){
-        for(auto &p:ctr) cmr->push_back(&ctr[i]),fp.emplace_back(prev(rd->end()));
+    render3d_guard(const contnr3d<face3d,ctrT> &ctr,render3d *const& rd_):rd(rd_){
+        for(auto &p:ctr) rd->push_back(&ctr[i]),fp.emplace_back(prev(rd->end()));
     }
     ~render3d_guard(){
         if(!face_removed)
-            for(auto &p:fp) cmr->erase(p);
+            for(auto &p:fp) rd->erase(p);
     }
     bool remove(){
         if(!face_removed){
             face_removed=1;
-            for(auto &p:fp) cmr->erase(p);
+            for(auto &p:fp) rd->erase(p);
             fp.erase(fp.begin(),fp.end());
             return 1;
         }

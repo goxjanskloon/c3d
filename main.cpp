@@ -8,7 +8,7 @@ inline int genint(const int &l,const int &r){
 }
 class render:public render3d{
 public:
-    vector3d pos{0,0,100},facing{0,0,400},dir{0,1,0};
+    vector3d pos{0,0,100},facing{0,0,400},ud{0,1,0},ld{1,0,0};
     int xl=1000,yl=600,cx=xl>>1,cy=yl>>1;
     PIMAGE img=newimage(xl,yl);
     render &init(){
@@ -20,7 +20,7 @@ public:
         return *this;
     }
     render &flush(){
-        render3d::render(pos,facing,dir,xl,yl,img);
+        render3d::render(pos,facing,ud,ld,xl,yl,img);
         cleardevice();
         putimage(0,0,img);
         cleardevice(img);

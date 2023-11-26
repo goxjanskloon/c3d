@@ -15,10 +15,11 @@ vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,c
     x+=c.x,y+=c.y,z+=c.z;
     return *this;
 }
-void render3d::render(const vector3d &pos,const vector3d &facing,const vector3d &dir,const int &width,const int &height,const PIMAGE &pimg){
-    vector3d mid=pos-facing;
+void render3d::render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height,const PIMAGE &pimg){
+    auto mid=pos+facing;
     for(int i=0;i<height;i++)
         for(int j=0;j<width;j++){
+            auto cur=mid+ud*(i-(height>>1))+ld*(j-(width>>1));
             
         }
 }
