@@ -52,17 +52,17 @@ public:
         return c/this->size();
     }
 };
-class face3d:public contnr3d<vector3d>{
+class triface3d:public contnr3d<vector3d,std::array<vector3d,3>>{
 public:
     color_t color=0;
-    face3d(){}
-    face3d(const std::list<vector3d> &faces,const color_t &color_):contnr3d(faces),color(color_){}
+    triface3d(){}
+    triface3d(const vector3d &v1,const vector3d &v2,const vector3d &v3,const color_t &color_):contnr3d({v1,v2,v3}),color(color_){}
 };
-class render3d:public std::list<face3d*>{
+class render3d:public std::list<triface3d*>{
 public:
     void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const const int &width,const int &height,const PIMAGE &pimg);
 };
-class rect3d:public contnr3d<face3d,std::array<face3d,6>>{
+class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
     rect3d(){}
     rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]);
@@ -71,10 +71,10 @@ public:
 class render3d_guard{
 public:
     render3d *rd;
-    std::list<std::list<face3d*>::iterator> fp;
+    std::list<std::list<triface3d*>::iterator> fp;
     bool face_removed=0;
     template<typename ctrT>
-    render3d_guard(const contnr3d<face3d,ctrT> &ctr,render3d *const& rd_):rd(rd_){
+    render3d_guard(const contnr3d<triface3d,ctrT> &ctr,render3d *const& rd_):rd(rd_){
         for(auto &p:ctr) rd->push_back(&ctr[i]),fp.emplace_back(prev(rd->end()));
     }
     ~render3d_guard(){

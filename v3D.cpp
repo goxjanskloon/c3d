@@ -20,16 +20,24 @@ void render3d::render(const vector3d &pos,const vector3d &facing,const vector3d 
     for(int i=0;i<height;i++)
         for(int j=0;j<width;j++){
             auto cur=mid+ud*(i-(height>>1))+ld*(j-(width>>1));
-            
+            for(auto &f:*this){
+                //TODO:Check if pos->cur cross on f,then math the cross point
+            }
         }
 }
 rect3d::rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]):contnr3d({
-    face3d({{a.x,a.y,a.z},{b.x,a.y,a.z},{b.x,b.y,a.z},{a.x,b.y,a.z}},colors[0]),
-    face3d({{a.x,a.y,b.z},{b.x,a.y,b.z},{b.x,b.y,b.z},{a.x,b.y,b.z}},colors[1]),
-    face3d({{a.x,a.y,b.z},{a.x,a.y,a.z},{a.x,b.y,a.z},{a.x,b.y,b.z}},colors[2]),
-    face3d({{b.x,a.y,a.z},{b.x,a.y,b.z},{b.x,b.y,b.z},{b.x,b.y,a.z}},colors[3]),
-    face3d({{a.x,a.y,b.z},{b.x,a.y,b.z},{b.x,a.y,a.z},{a.x,a.y,a.z}},colors[4]),
-    face3d({{a.x,b.y,b.z},{b.x,b.y,b.z},{b.x,b.y,a.z},{a.x,b.y,a.z}},colors[5])}){}
+    triface3d({b.x,a.y,a.z},{a.x,b.y,a.z},{a.x,a.y,a.z},colors[0]),
+    triface3d({b.x,a.y,a.z},{a.x,b.y,a.z},{b.x,b.y,a.z},colors[0]),
+    triface3d({b.x,a.y,b.z},{a.x,b.y,b.z},{a.x,a.y,b.z},colors[1]),
+    triface3d({b.x,a.y,b.z},{a.x,b.y,b.z},{b.x,b.y,b.z},colors[1]),
+    triface3d({a.x,a.y,b.z},{a.x,b.y,a.z},{a.x,a.y,a.z},colors[2]),
+    triface3d({a.x,a.y,b.z},{a.x,b.y,a.z},{a.x,b.y,b.z},colors[2]),
+    triface3d({b.x,a.y,b.z},{b.x,b.y,a.z},{b.x,a.y,a.z},colors[3]),
+    triface3d({b.x,a.y,b.z},{b.x,b.y,a.z},{b.x,b.y,b.z},colors[3]),
+    triface3d({b.x,a.y,b.z},{a.x,a.y,a.z},{a.x,a.y,b.z},colors[4]),
+    triface3d({b.x,a.y,b.z},{a.x,a.y,a.z},{b.x,a.y,a.z},colors[4]),
+    triface3d({b.x,b.y,b.z},{a.x,b.y,a.z},{a.x,b.y,b.z},colors[5]),
+    triface3d({b.x,b.y,b.z},{a.x,b.y,a.z},{b.x,b.y,a.z},colors[5])}){}
 std::pair<vector3d,vector3d> rect3d::collisionbox()const{
     vector3d p1(DBL_MAX,-DBL_MAX,DBL_MAX),p2(-DBL_MAX,DBL_MAX,-DBL_MAX);
     for(const auto &f:*this)
