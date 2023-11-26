@@ -54,7 +54,7 @@ rect3d::rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]):co
     triface3d({b.x,b.y,b.z},{a.x,b.y,a.z},{a.x,b.y,b.z},colors[5]),
     triface3d({b.x,b.y,b.z},{a.x,b.y,a.z},{b.x,b.y,a.z},colors[5])}){}
 std::pair<vector3d,vector3d> rect3d::collisionbox()const{
-    vector3d p1(DBL_MAX,-DBL_MAX,DBL_MAX),p2(-DBL_MAX,DBL_MAX,-DBL_MAX);
+    vector3d p1{DBL_MAX,-DBL_MAX,DBL_MAX},p2{-DBL_MAX,DBL_MAX,-DBL_MAX};
     for(const auto &f:*this)
         for(const auto &p:f) p1.x=std::min(p1.x,p.x),p1.y=std::max(p1.y,p.y),p1.z=std::min(p1.z,p.z),p2.x=std::max(p2.x,p.x),p2.y=std::min(p2.y,p.y),p2.z=std::max(p2.z,p.z);
     return std::make_pair(p1,p2);

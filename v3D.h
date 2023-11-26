@@ -77,8 +77,8 @@ public:
     std::list<std::list<triface3d*>::iterator> fp;
     bool face_removed=0;
     template<typename ctrT>
-    render3d_guard(const contnr3d<triface3d,ctrT> &ctr,render3d *const& rd_):rd(rd_){
-        for(triface3d &p:ctr) rd->push_back(&p),fp.emplace_back(prev(rd->end()));
+    render3d_guard(contnr3d<triface3d,ctrT> &ctr,render3d *const& rd_):rd(rd_){
+        for(auto &p:ctr) rd->push_back(&p),fp.emplace_back(prev(rd->end()));
     }
     ~render3d_guard(){
         if(!face_removed)
