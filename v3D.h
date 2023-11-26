@@ -21,21 +21,24 @@ public:
     vector3d &operator-=(const vector3d &v){x-=v.x,y-=v.y,z-=v.z;return *this;}
     vector3d operator*(const double &a)const{return {x*a,y*a,z*a};}
     vector3d &operator*=(const double &a){x*=a,y*=a,z*=a;return *this;}
+    vector3d &scale(const vector3d &c,const vector3d &v){return ((*this-=c)*=v)+=c;}
+    double operator*(const vector3d &v)const{return x*v.x+y*v.y+z*v.z;}
+    vector3d &operator*=(const vector3d &v){x*=v.x,y*=v.y,z*=v.z;return *this;}
     vector3d operator/(const double &a)const{return {x/a,y/a,z/a};}
     vector3d &operator/=(const double &a){x/=a,y/=a,z/=a;return *this;}
-    double operator*(const vector3d &v)const{return x*v.x+y*v.y+z*v.z;}
     vector3d operator&(const vector3d &v)const{return {y*v.z-v.y*z,v.x*z-z*v.z,x*v.y-v.x*y};}
     vector3d &operator&=(const vector3d &v){x=y*v.z-v.y*z,y=v.x*z-z*v.z,z=x*v.y-v.x*y;return *this;}
-    vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,const double &dz);
+    vector3d &rotate(const vector3d &c,const double &dx,const double &dy,const double &dz);
     double norm()const{return sqrt(x*x+y*y+z*z);}
+    const vector3d &center()const{return *this;}
 };
 template<typename objT,typename ctrT=std::list<objT>>
 class contnr3d:public ctrT{
 public:
     contnr3d(){}
     contnr3d(const ctrT &objs_):ctrT(objs_){}
-    contnr3d &move(const double &tx,const double &ty,const double &tz){
-        for(auto &p:*this) p.move(tx,ty,tz);
+    contnr3d &operator+=(const vector3d &v){
+        for(auto &p:*this) p+=v;
         return *this;
     }
     contnr3d &scale(const vector3d &c,const double &sx,const double &sy,const double &sz){
@@ -60,7 +63,7 @@ public:
 };
 class render3d:public std::list<triface3d*>{
 public:
-    void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const const int &width,const int &height,const PIMAGE &pimg);
+    void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height,const PIMAGE &pimg);
 };
 class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
@@ -75,7 +78,7 @@ public:
     bool face_removed=0;
     template<typename ctrT>
     render3d_guard(const contnr3d<triface3d,ctrT> &ctr,render3d *const& rd_):rd(rd_){
-        for(auto &p:ctr) rd->push_back(&ctr[i]),fp.emplace_back(prev(rd->end()));
+        for(triface3d &p:ctr) rd->push_back(&p),fp.emplace_back(prev(rd->end()));
     }
     ~render3d_guard(){
         if(!face_removed)

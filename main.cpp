@@ -49,7 +49,7 @@ void test(){
             int mx,my;
             mousepos(&mx,&my);
             dx=(rd.cy-my)*180.0/rd.cy,dy=(rd.cx-mx)*180.0/rd.cx;
-            rect2.move(tx,ty,tz);
+            rect2+={tx,ty,tz};
             auto pb1=rect1.collisionbox(),pb2=rect2.collisionbox();
             if(keydown(27)) return;
             if(keydown('C')){
