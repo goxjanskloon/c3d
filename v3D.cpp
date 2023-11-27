@@ -2,7 +2,7 @@
 #include<vector>
 #include<cfloat>
 vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,const double &dz){
-    x-=c.x,y-=c.y,z-=c.z;
+    *this-=c;
     const double sindx=sind(dx),sindy=sind(dy),sindz=sind(dz),cosdx=cosd(dx),cosdy=cosd(dy),cosdz=cosd(dz);
     auto s=*this;
     y=y*cosdx-z*sindx;
@@ -12,28 +12,32 @@ vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,c
     s.x=x;
     x=x*cosdz-y*sindz;
     y=s.x*sindz+y*cosdz;
-    x+=c.x,y+=c.y,z+=c.z;
+    *this+=c;
     return *this;
 }
-void render3d::render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height,const PIMAGE &pimg){
+void render3d::render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &rd,const int &width,const int &height,const PIMAGE &pimg){
     auto mid=pos+facing;
+    const int hh=height>>1,hw=width>>1;
     for(int i=0;i<height;i++)
         for(int j=0;j<width;j++){
             std::list<std::pair<double,color_t>> px;
-            for(auto &f:*this){
-                vector3d e1=(*f)[1]-(*f)[0],e2=(*f)[2]-(*f)[0],t,d=facing+ud*(i-(height>>1))+ld*(j-(width>>1)),p=d&e2;
-                double det=e1*p;
-                if(det>0) t=pos-(*f)[0];
-                else t=(*f)[0]-pos,det*=-1;
-                if(det<0.0001f) continue;
-                auto u=t*p;if(u<0||u>det) continue;
-                auto q=t&e1;double v=d*q;
-                if(v<0||u+v>det) continue;
-                double dt=e2*q;if(dt<0) continue;
-                px.emplace_back(dt,f->color);
+            for(auto &fp:*this){
+                auto &f=*fp;
+                const auto e1=f[1]-f[0],e2=f[2]-f[0],d=facing+ud*(hh-i)+rd*(j-hw),pvec=d&e2;
+                double det=e1*pvec;
+                if(det<0.0001) continue;
+                det=1/det;
+                const auto tvec=pos-f[0];
+                const double u=tvec*pvec*(det);
+                if(u<0||u>1) continue;
+                const auto qvec=tvec&e1;
+                const double v=d*qvec*(det);
+                if(v<0||u+v>1) continue;
+                const double t=e2*qvec*(det);
+                if(t<0.0001) continue;
+                px.emplace_back((pos+d*t).z,f.color);
             }
             px.sort([](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
-            color_t pxc=0;
             for(auto &p:px){
                 putpixel_f(height-1-j,width-1-i,p.second,pimg);
                 if(EGEGET_A(p.second)==0xff) break;
