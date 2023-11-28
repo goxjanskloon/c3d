@@ -14,9 +14,6 @@ public:
     render &init(){
         initgraph(xl,yl,getinitmode());
         ege_enable_aa(1,img);
-        setbkmode(TRANSPARENT,img);
-        setfont(20,0,"Consolas",img);
-        setcolor(WHITE,img);
         return *this;
     }
     render &flush(){
