@@ -1,6 +1,6 @@
 #include"v3D.h"
 #include<random>
-inline bool keydown(int vKey){ return GetAsyncKeyState(vKey)&0x8000; }
+inline bool keydown(int vKey){return GetAsyncKeyState(vKey)&0x8000;}
 inline int genint(const int &l,const int &r){
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -8,8 +8,8 @@ inline int genint(const int &l,const int &r){
 }
 class render:public render3d{
 public:
-    vector3d pos{0,0,100},facing{0,0,400},ud{0,1,0},rd{1,0,0};
-    int xl=1000,yl=600,cx=xl>>1,cy=yl>>1;
+    vector3d pos{0,0,0},facing{0,0,400},ud{0,1,0},rd{1,0,0};
+    int xl=500,yl=300,cx=xl>>1,cy=yl>>1;
     PIMAGE img=newimage(xl,yl);
     render &init(){
         initgraph(xl,yl,getinitmode());

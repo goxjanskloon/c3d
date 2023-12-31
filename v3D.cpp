@@ -1,7 +1,6 @@
 #include"v3D.h"
 #include<vector>
 #include<cfloat>
-#include<iostream>
 vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,const double &dz){
     *this-=c;
     const double sindx=sind(dx),sindy=sind(dy),sindz=sind(dz),cosdx=cosd(dx),cosdy=cosd(dy),cosdz=cosd(dz);
@@ -29,18 +28,17 @@ void render3d::render(const vector3d &pos,const vector3d &facing,const vector3d 
                 if(det<0.0001) continue;
                 det=1/det;
                 const auto tvec=pos-f[0];
-                const double u=tvec*pvec*(det);
+                const double u=tvec*pvec*det;
                 if(u<0||u>1) continue;
                 const auto qvec=tvec&e1;
-                const double v=d*qvec*(det);
+                const double v=d*qvec*det;
                 if(v<0||u+v>1) continue;
-                const double t=e2*qvec*(det);
-                if(t<0.0001) continue;
-                px.emplace_back((pos+d*t).z,f.color);
+                const double t=e2*qvec*det;
+                if(t>0) px.emplace_back(t,f.color);
             }
             px.sort([](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
             for(auto &p:px){
-                putpixel_f(width-1-j,height-1-i,p.second,pimg);
+                putpixel_f(j,i,p.second,pimg);
                 if(EGEGET_A(p.second)==0xff) break;
             }
         }
