@@ -15,7 +15,7 @@ vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,c
     *this+=c;
     return *this;
 }
-void render3d::render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &rd,const int &width,const int &height,const PIMAGE &pimg){
+void renderer3d::render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &rd,const int &width,const int &height,const PIMAGE &pimg){
     auto mid=pos+facing;
     const int hh=height>>1,hw=width>>1;
     for(int i=0;i<height;i++)

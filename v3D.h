@@ -61,7 +61,7 @@ public:
     triface3d(){}
     triface3d(const vector3d &v1,const vector3d &v2,const vector3d &v3,const color_t &color_):contnr3d({v1,v2,v3}),color(color_){}
 };
-class render3d:public std::list<triface3d*>{
+class renderer3d:public std::list<triface3d*>{
 public:
     void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height,const PIMAGE &pimg);
 };
@@ -70,16 +70,16 @@ public:
     rect3d(){}
     rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]);
 };
-class render3d_guard{
+class renderer3d_guard{
 public:
-    render3d *rd;
+    renderer3d *rd;
     std::list<std::list<triface3d*>::iterator> fp;
     bool face_removed=0;
     template<typename ctrT>
-    render3d_guard(contnr3d<triface3d,ctrT> &ctr,render3d *const& rd_):rd(rd_){
+    renderer3d_guard(contnr3d<triface3d,ctrT> &ctr,renderer3d *const& rd_):rd(rd_){
         for(auto &p:ctr) rd->push_back(&p),fp.emplace_back(prev(rd->end()));
     }
-    ~render3d_guard(){
+    ~renderer3d_guard(){
         if(!face_removed)
             for(auto &p:fp) rd->erase(p);
     }
