@@ -1,4 +1,5 @@
 #include"v3D.h"
+#include<execution>
 #include<vector>
 #include<cfloat>
 vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,const double &dz){

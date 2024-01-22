@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(v3D VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_FLAGS"-std=c++23 -Wall")
-set(CMAKE_CXX_FLAGS_RELEASE"-O3")
+set(CMAKE_CXX_FLAGS_RELEASE"-O2")
 link_directories(${PROJECT_SOURCE_DIR}/EGE)
 add_executable(v3D main.cpp v3D.cpp)
 target_link_libraries(v3D libgraphics64.a libgdiplus.a libuuid.a libmsimg32.a libgdi32.a libimm32.a libole32.a liboleaut32.a libwinmm.a)

@@ -1,5 +1,7 @@
 #pragma once
 #include"EGE/graphics.h"
+#include<algorithm>
+#include<execution>
 #include<utility>
 #include<cstddef>
 #include<array>
@@ -26,12 +28,12 @@ public:
     vector3d &operator*=(const vector3d &v){x*=v.x,y*=v.y,z*=v.z;return *this;}
     vector3d operator/(const double &a)const{return {x/a,y/a,z/a};}
     vector3d &operator/=(const double &a){x/=a,y/=a,z/=a;return *this;}
-    vector3d operator&(const vector3d &v)const{return {y*v.z-v.y*z,v.x*z-z*v.z,x*v.y-v.x*y};}
-    vector3d &operator&=(const vector3d &v){x=y*v.z-v.y*z,y=v.x*z-z*v.z,z=x*v.y-v.x*y;return *this;}
+    vector3d operator&(const vector3d &v)const{return {y*v.z-z*v.y,z*v.x-x*v.z,x*v.y-y*v.x};}
+    vector3d &operator&=(const vector3d &v){x=y*v.z-z*v.y,y=z*v.x-x*v.z,z=x*v.y-y*v.x;return *this;}
     vector3d &rotate(const vector3d &c,const double &dx,const double &dy,const double &dz);
     double norm()const{return sqrt(x*x+y*y+z*z);}
     const vector3d &center()const{return *this;}
-};
+};//y*v.z-z*v.y,z*v.x-x*v.z,x*v.y-y*v.x
 template<typename objT,typename ctrT=std::list<objT>>
 class contnr3d:public ctrT{
 public:
@@ -64,6 +66,25 @@ public:
 class renderer3d:public std::list<triface3d*>{
 public:
     void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height,const PIMAGE &pimg);
+    template<typename itrT>
+    void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &rd,const int &width,const int &height,const itrT &first,const itrT &last,const PIMAGE &pimg){
+        auto mid=pos+facing;
+        const int hh=height>>1,hw=width>>1;
+        std::for_each(std::execution::par_unseq,first,last,[&](auto &p){
+            std::list<std::pair<double,color_t>> px;
+            for(auto &fp:*this){
+                auto &f=*fp;
+                vector3d e1=f[1]-f[0],e2=f[2]-f[0],s=pos-f[0],d=facing+ud*(hh-p.first)+rd*(p.second-hw),s1=d&e2,s2=s&e1;
+                double c=1/(s1*e1),t=s2*e2*t,b1=s1*s*c,b2=s2*d*c;
+                if(t>=0&&b1>=0&&b2>=0&&b1+b2<=1) px.emplace_back(t,f.color);
+            }
+            px.sort([](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
+            for(auto &p:px){
+                putpixel_f(p.second,p.first,p.second,pimg);
+                if(EGEGET_A(p.second)==0xff) break;
+            }
+        });
+    }
 };
 class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
