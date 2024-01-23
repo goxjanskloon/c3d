@@ -66,34 +66,6 @@ public:
 class renderer3d:public std::list<triface3d*>{
 public:
     void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height,const PIMAGE &pimg);
-    template<typename itrT>
-    void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &rd,const int &width,const int &height,const itrT &first,const itrT &last,const PIMAGE &pimg){
-        auto mid=pos+facing;
-        const int hh=height>>1,hw=width>>1;
-        std::for_each(std::execution::par_unseq,first,last,[&](auto &p){
-            std::list<std::pair<double,color_t>> px;
-            for(auto &fp:*this){
-                auto &f=*fp;
-                const auto e1=f[1]-f[0],e2=f[2]-f[0],d=facing+ud*(hh-p.first)+rd*(p.second-hw),pvec=d&e2;
-                double det=e1*pvec;
-                if(fabs(det)<std::numeric_limits<double>::epsilon()) continue;
-                det=1/det;
-                const auto tvec=pos-f[0];
-                const double u=tvec*pvec*det;
-                if(u<0||u>1) continue;
-                const auto qvec=tvec&e1;
-                const double v=d*qvec*det;
-                if(v<0||u+v>1) continue;
-                const double t=e2*qvec*det;
-                if(t>0) px.emplace_back(t,f.color);
-            }
-            px.sort([](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
-            for(auto &p:px){
-                putpixel_f(p.second,p.first,p.second,pimg);
-                if(EGEGET_A(p.second)==0xff) break;
-            }
-        });
-    }
 };
 class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
