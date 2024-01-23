@@ -1,7 +1,6 @@
 #include"v3D.h"
-#include<execution>
+#include<limits>
 #include<vector>
-#include<cfloat>
 vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,const double &dz){
     *this-=c;
     const double sindx=sind(dx),sindy=sind(dy),sindz=sind(dz),cosdx=cosd(dx),cosdy=cosd(dy),cosdz=cosd(dz);
@@ -26,7 +25,7 @@ void renderer3d::render(const vector3d &pos,const vector3d &facing,const vector3
                 auto &f=*fp;
                 const auto e1=f[1]-f[0],e2=f[2]-f[0],d=facing+ud*(hh-i)+rd*(j-hw),pvec=d&e2;
                 double det=e1*pvec;
-                if(det<0.0001) continue;
+                if(fabs(det)<std::numeric_limits<double>::epsilon()) continue;
                 det=1/det;
                 const auto tvec=pos-f[0];
                 const double u=tvec*pvec*det;

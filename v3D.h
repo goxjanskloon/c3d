@@ -33,7 +33,7 @@ public:
     vector3d &rotate(const vector3d &c,const double &dx,const double &dy,const double &dz);
     double norm()const{return sqrt(x*x+y*y+z*z);}
     const vector3d &center()const{return *this;}
-};//y*v.z-z*v.y,z*v.x-x*v.z,x*v.y-y*v.x
+};
 template<typename objT,typename ctrT=std::list<objT>>
 class contnr3d:public ctrT{
 public:
@@ -74,9 +74,18 @@ public:
             std::list<std::pair<double,color_t>> px;
             for(auto &fp:*this){
                 auto &f=*fp;
-                vector3d e1=f[1]-f[0],e2=f[2]-f[0],s=pos-f[0],d=facing+ud*(hh-p.first)+rd*(p.second-hw),s1=d&e2,s2=s&e1;
-                double c=1/(s1*e1),t=s2*e2*t,b1=s1*s*c,b2=s2*d*c;
-                if(t>=0&&b1>=0&&b2>=0&&b1+b2<=1) px.emplace_back(t,f.color);
+                const auto e1=f[1]-f[0],e2=f[2]-f[0],d=facing+ud*(hh-p.first)+rd*(p.second-hw),pvec=d&e2;
+                double det=e1*pvec;
+                if(fabs(det)<std::numeric_limits<double>::epsilon()) continue;
+                det=1/det;
+                const auto tvec=pos-f[0];
+                const double u=tvec*pvec*det;
+                if(u<0||u>1) continue;
+                const auto qvec=tvec&e1;
+                const double v=d*qvec*det;
+                if(v<0||u+v>1) continue;
+                const double t=e2*qvec*det;
+                if(t>0) px.emplace_back(t,f.color);
             }
             px.sort([](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
             for(auto &p:px){
