@@ -31,6 +31,7 @@ public:
     vector3d operator&(const vector3d &v)const{return {y*v.z-z*v.y,z*v.x-x*v.z,x*v.y-y*v.x};}
     vector3d &operator&=(const vector3d &v){x=y*v.z-z*v.y,y=z*v.x-x*v.z,z=x*v.y-y*v.x;return *this;}
     vector3d &rotate(const vector3d &c,const double &dx,const double &dy,const double &dz);
+    vector3d protate(const vector3d &c,const double &dx,const double &dy,const double &dz)const{return vector3d(*this).rotate(c,dx,dy,dz);}
     double norm()const{return sqrt(x*x+y*y+z*z);}
     const vector3d &center()const{return *this;}
 };
