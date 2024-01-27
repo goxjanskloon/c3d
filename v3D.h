@@ -1,9 +1,5 @@
 #pragma once
 #include"EGE/graphics.h"
-#include<algorithm>
-#include<execution>
-#include<utility>
-#include<cstddef>
 #include<array>
 #include<cmath>
 #include<list>
