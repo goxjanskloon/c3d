@@ -1,5 +1,6 @@
 #pragma once
 #include"EGE/graphics.h"
+#include<future>
 #include<array>
 #include<cmath>
 #include<list>
@@ -62,7 +63,8 @@ public:
 };
 class renderer3d:public std::list<triface3d*>{
 public:
-    void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height,const PIMAGE &pimg);
+    std::future<void> ft[4][4];
+    void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height);
 };
 class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
