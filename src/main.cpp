@@ -6,11 +6,12 @@ public:
     float minfps=__FLT_MAX__,maxfps=-1,curfps=-1;
     double ltm=0,ctm=0;
     render &init(){
-        initgraph(xl,yl,getinitmode()|INIT_RENDERMANUAL);
+        initgraph(xl,yl,INIT_RENDERMANUAL);
         setcaption("v3D");
         ege_enable_aa(1);
         setbkmode(TRANSPARENT);
         setfont(20,0,"Consolas");
+        setcolor(WHITE);
         return *this;
     }
     render &flush(){
@@ -21,7 +22,7 @@ public:
             curfps=getfps(),maxfps=std::max(maxfps,curfps),minfps=std::min(minfps,curfps);
         }
         xyprintf(0,0,"FPS(MIN/CUR/MAX):%f/%f/%f",minfps,curfps,maxfps);
-        outtextxy(0,20,std::string(int(curfps/2),'#').c_str());
+        ege_fillrect(0,20,curfps/2,20);
         return *this;
     }
     ~render(){closegraph();}

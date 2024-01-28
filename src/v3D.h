@@ -1,5 +1,5 @@
 #pragma once
-#include"EGE/graphics.h"
+#include<EGE/graphics.h>
 #include<future>
 #include<array>
 #include<cmath>
