@@ -1,14 +1,19 @@
 #include"v3D.h"
+#include<functional>
 class render:public renderer3d{
 public:
-    vector3d pos{0,0,0},facing{0,0,400},ud{0,0.5,0},rd{0.5,0,0};
-    int xl=1000,yl=600,cx=xl>>1,cy=yl>>1;
+    int h[4]{},w[4]{};
     float minfps=__FLT_MAX__,maxfps=-1,curfps=-1;
     double ltm=0,ctm=0;
+    std::future<void> ft[3][3];
+    const std::function<void(const int&,const int&,const int&,const int&)> rdfunc=std::bind(render_pixel,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
+    render(const int &xl,const int &yl):renderer3d({0,0,0},{0,0,400},{0,1,0},{1,0,0},xl,yl){
+        h[1]=height*0.3,h[2]=height*0.6,h[3]=height;
+        w[1]=width*0.3,w[2]=width*0.6,w[3]=width;
+    }
     render &init(){
-        initgraph(xl,yl,INIT_RENDERMANUAL);
+        initgraph(width,height,INIT_RENDERMANUAL);
         setcaption("v3D");
-        ege_enable_aa(1);
         setbkmode(TRANSPARENT);
         setfont(20,0,"Consolas");
         setcolor(WHITE);
@@ -16,7 +21,8 @@ public:
     }
     render &flush(){
         cleardevice();
-        renderer3d::render(pos,facing,ud,rd,xl,yl);
+        for(int i=1;i<4;i++)for(int j=1;j<4;j++) ft[i-1][j-1]=std::async(std::launch::async,rdfunc,w[i-1],w[i],h[j-1],h[j]);
+        for(int i=0;i<3;i++)for(int j=0;j<3;j++) ft[i][j].get();
         if((ctm=fclock())-ltm>0.5){
             ltm=ctm;
             curfps=getfps(),maxfps=std::max(maxfps,curfps),minfps=std::min(minfps,curfps);
@@ -28,12 +34,12 @@ public:
     ~render(){closegraph();}
 };
 void test(){
-    rect3d rect({-50,50,450},{50,-50,550},{color_t(BLUE),color_t(RED),color_t(GREEN),color_t(YELLOW),color_t(BROWN),color_t(CYAN)}),rectt=rect;
-    render rd;
+    rect3d rect({-100,100,450},{100,-100,650},{color_t(BLUE),color_t(RED),color_t(GREEN),color_t(YELLOW),color_t(BROWN),color_t(CYAN)}),rectt=rect;
+    render rd(1000,600);
     renderer3d_guard rg(rect,&rd);
     rd.init();
     const auto c=rect.center();
-    for(double t=0;is_run();rect=rectt,t+=0.5,delay_fps(60)) rect.rotate(c,t,t,t),rd.flush();
+    for(double t=0;is_run();rect=rectt,t+=0.5,delay_fps(60)) rect.rotate(c,t*1.5,t*2,t),rd.flush();
 }
 int main(){
     test();

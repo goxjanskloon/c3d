@@ -63,8 +63,11 @@ public:
 };
 class renderer3d:public std::list<triface3d*>{
 public:
-    std::future<void> ft[4][4];
-    void render(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &ld,const int &width,const int &height);
+    vector3d pos,facing,ud,rd;
+    int width,height,hw,hh;
+    renderer3d(){}
+    renderer3d(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &rd,const int &width,const int &height):pos(pos),facing(facing),ud(ud),rd(rd),width(width),height(height),hw(width>>1),hh(height>>1){}
+    void render_pixel(const int &lx,const int &rx,const int &ly,const int &ry);
 };
 class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
