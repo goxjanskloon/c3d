@@ -28,7 +28,7 @@ public:
             curfps=getfps(),maxfps=std::max(maxfps,curfps),minfps=std::min(minfps,curfps);
         }
         xyprintf(0,0,"FPS(MIN/CUR/MAX):%f/%f/%f",minfps,curfps,maxfps);
-        ege_fillrect(0,20,curfps/2,20);
+        ege_fillrect(0,20,int(curfps/2),20);
         return *this;
     }
     ~render(){closegraph();}

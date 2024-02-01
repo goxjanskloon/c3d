@@ -35,7 +35,7 @@ void renderer3d::render_pixel(const int &lx,const int &rx,const int &ly,const in
     }
     px.sort([](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
     for(auto &p:px){
-        putpixel_f(j,i,p.second);
+        putpixel_withalpha_f(j,i,p.second);
         if(EGEGET_A(p.second)==0xff) break;
 }}}
 rect3d::rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]):contnr3d({
