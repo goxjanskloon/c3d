@@ -16,7 +16,7 @@ public:
         setcaption("v3D");
         setbkmode(TRANSPARENT);
         setfont(20,0,"Consolas");
-        setcolor(WHITE);
+        setfillcolor(WHITE);
         return *this;
     }
     render &flush(){
@@ -28,7 +28,7 @@ public:
             curfps=getfps(),maxfps=std::max(maxfps,curfps),minfps=std::min(minfps,curfps);
         }
         xyprintf(0,0,"FPS(MIN/CUR/MAX):%f/%f/%f",minfps,curfps,maxfps);
-        ege_fillrect(0,20,int(curfps/2),20);
+        ege_fillrect(0,20,(curfps-minfps)/(maxfps-minfps)*width,20);
         return *this;
     }
     ~render(){closegraph();}
@@ -39,7 +39,7 @@ void test(){
     renderer3d_guard rg(rect,&rd);
     rd.init();
     const auto c=rect.center();
-    for(double t=0;is_run();rect=rectt,t+=0.5,delay_fps(60)) rect.rotate(c,t*1.5,t*2,t),rd.flush();
+    for(double t=0;is_run();rect=rectt,t+=0.5,delay_ms(1)) rect.rotate(c,t*1.5,t*2,t),rd.flush();
 }
 int main(){
     test();

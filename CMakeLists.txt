@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(v3D)
 set(CMAKE_CXX_FLAGS"-std=c++23 -Wall")
-set(CMAKE_CXX_FLAGS_RELEASE"-O2")
+set(CMAKE_CXX_FLAGS_RELEASE"-O3")
 link_directories(${PROJECT_SOURCE_DIR}/EGE)
 include_directories(${PROJECT_SOURCE_DIR})
 add_executable(v3D src/main.cpp src/v3D.cpp)
