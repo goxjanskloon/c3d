@@ -4,9 +4,8 @@
 #include<array>
 #include<cmath>
 #include<list>
-#define SHOW_CONSOLE 0
-inline double sind(const double &a){ return sin(0.017453292519943295*a); }
-inline double cosd(const double &a){ return cos(0.017453292519943295*a); }
+inline double sind(const double &a){return sin(0.017453292519943295*a);}
+inline double cosd(const double &a){return cos(0.017453292519943295*a);}
 class vector3d{
 public:
     double x,y,z;
@@ -67,13 +66,15 @@ public:
     int width,height,hw,hh;
     renderer3d(){}
     renderer3d(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &rd,const int &width,const int &height):pos(pos),facing(facing),ud(ud),rd(rd),width(width),height(height),hw(width>>1),hh(height>>1){}
-    void render_pixel(const int &lx,const int &rx,const int &ly,const int &ry);
+    void render_pixel(const int &lx,const int &rx,const int &ly,const int &ry)const;
 };
 class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
     rect3d(){}
     rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]);
+    std::pair<vector3d,vector3d> collisionbox()const;
 };
+byte colliding(const std::pair<vector3d,vector3d> &r1,const std::pair<vector3d,vector3d> &r2);
 class renderer3d_guard{
 public:
     renderer3d *rd;
