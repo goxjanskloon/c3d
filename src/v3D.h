@@ -72,9 +72,9 @@ class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
     rect3d(){}
     rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]);
-    std::pair<vector3d,vector3d> collisionbox()const;
+    std::pair<vector3d,vector3d> box()const;
 };
-byte colliding(const std::pair<vector3d,vector3d> &r1,const std::pair<vector3d,vector3d> &r2);
+bool is_collided(const std::pair<vector3d,vector3d> &r1,const std::pair<vector3d,vector3d> &r2);
 class renderer3d_guard{
 public:
     renderer3d *rd;

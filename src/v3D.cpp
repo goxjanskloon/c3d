@@ -1,4 +1,5 @@
 #include"v3D.h"
+#include<algorithm>
 #include<utility>
 #include<vector>
 vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,const double &dz){
@@ -17,12 +18,12 @@ vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,c
 }
 void renderer3d::render_pixel(const int &lx,const int &rx,const int &ly,const int &ry)const{
     for(int i=ly;i<ry;i++)for(int j=lx;j<rx;j++){
-    std::list<std::pair<double,color_t>> px;
+    std::vector<std::pair<double,color_t>> px;
     for(const auto &fp:*this){
         auto &f=*fp;
         const auto e1=f[1]-f[0],e2=f[2]-f[0],d=facing+ud*(hh-i)+rd*(j-hw),pv=d&e2;
         double det=e1*pv;
-        if(fabs(det)<__DBL_EPSILON__) continue;
+        if(fabsf(det)<__DBL_EPSILON__) continue;
         det=1/det;
         const auto tvec=pos-f[0];
         const double u=tvec*pv*det;
@@ -33,7 +34,7 @@ void renderer3d::render_pixel(const int &lx,const int &rx,const int &ly,const in
         const double t=e2*qv*det;
         if(t>0) px.emplace_back(t,f.color);
     }
-    px.sort([](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
+    std::sort(px.begin(),px.end(),[](const std::pair<double,color_t> &x,const std::pair<double,color_t> &y){return x.first<y.first;});
     for(auto &p:px){
         putpixel_withalpha_f(j,i,p.second);
         if(EGEGET_A(p.second)==0xff) break;
@@ -51,16 +52,15 @@ rect3d::rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]):co
     triface3d({b.x,a.y,b.z},{a.x,a.y,a.z},{b.x,a.y,a.z},colors[4]),
     triface3d({b.x,b.y,b.z},{a.x,b.y,a.z},{a.x,b.y,b.z},colors[5]),
     triface3d({b.x,b.y,b.z},{a.x,b.y,a.z},{b.x,b.y,a.z},colors[5])}){}
-std::pair<vector3d,vector3d> rect3d::collisionbox()const{
+std::pair<vector3d,vector3d> rect3d::box()const{
     vector3d p1{__DBL_MAX__,-__DBL_MAX__,__DBL_MAX__},p2{-__DBL_MAX__,__DBL_MAX__,-__DBL_MAX__};
     for(const auto &f:*this)
         for(const auto &p:f) p1.x=std::min(p1.x,p.x),p1.y=std::max(p1.y,p.y),p1.z=std::min(p1.z,p.z),p2.x=std::max(p2.x,p.x),p2.y=std::min(p2.y,p.y),p2.z=std::max(p2.z,p.z);
-    return std::make_pair(p1,p2);
+    return{p1,p2};
 }
-byte colliding(const std::pair<vector3d,vector3d> &r1,const std::pair<vector3d,vector3d> &r2){
+bool is_collided(const std::pair<vector3d,vector3d> &r1,const std::pair<vector3d,vector3d> &r2){
     const vector3d &p11=r1.first,&p12=r1.second,&p21=r2.first,&p22=r2.second;
-    byte c=((p21.x<p11.x&&p11.x<p22.x||p21.x<p12.x&&p12.x<p22.x||p11.x<p21.x&&p21.x<p12.x||p11.x<p22.x&&p22.x<p12.x)<<2
-           |(p22.y<p11.y&&p11.y<p21.y||p22.y<p12.y&&p12.y<p21.y||p12.y<p21.y&&p21.y<p11.y||p12.y<p22.y&&p22.y<p11.y)<<1
-           |(p21.z<p11.z&&p11.z<p22.z||p21.z<p12.z&&p12.z<p22.z||p11.z<p21.z&&p21.z<p12.z||p11.z<p22.z&&p22.z<p12.z)<<0);
-    return c|((c>>2&1)&(c>>1&1)&(c&1))<<3;
+    return (p21.x<p11.x&&p11.x<p22.x||p21.x<p12.x&&p12.x<p22.x||p11.x<p21.x&&p21.x<p12.x||p11.x<p22.x&&p22.x<p12.x)
+         &&(p22.y<p11.y&&p11.y<p21.y||p22.y<p12.y&&p12.y<p21.y||p12.y<p21.y&&p21.y<p11.y||p12.y<p22.y&&p22.y<p11.y)
+         &&(p21.z<p11.z&&p11.z<p22.z||p21.z<p12.z&&p12.z<p22.z||p11.z<p21.z&&p21.z<p12.z||p11.z<p22.z&&p22.z<p12.z);
 }

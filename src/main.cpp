@@ -51,7 +51,7 @@ void test(){
             mousepos(&mx,&my);
             dx=(rd.hh-my)*180.0/rd.hh,dy=(rd.hw-mx)*180.0/rd.hw;
             rect2+={tx,ty,tz};
-            const auto pb1=rect1.collisionbox(),pb2=rect2.collisionbox();
+            const auto pb1=rect1.box(),pb2=rect2.box();
             if(keystate('C')){
                 r1=rect3d(pb1.first,pb1.second,{EGECOLORA(BLUE,100),EGECOLORA(RED,100),EGECOLORA(YELLOW,100),EGECOLORA(GREEN,100),EGECOLORA(BROWN,100),EGECOLORA(CYAN,100)});
                 r2=rect3d(pb2.first,pb2.second,{EGECOLORA(BLUE,100),EGECOLORA(RED,100),EGECOLORA(YELLOW,100),EGECOLORA(GREEN,100),EGECOLORA(BROWN,100),EGECOLORA(CYAN,100)});
@@ -63,9 +63,8 @@ void test(){
             r1.rotate(c1,dx,dy,0),r2.rotate(c1,dx,dy,0);
             const auto t1=rect1,t2=rect2;
             rect1.rotate(c1,dx,dy,0),rect2.rotate(c1,dx,dy,0);
-            const byte c=colliding(pb1,pb2);
             rd.flush();
-            xyprintf(0,40,"colliding:%s",(c>>3)?"true":"false");
+            xyprintf(0,40,"colliding:%s",is_collided(pb1,pb2)?"true":"false");
             xyprintf(0,60,"dx=%f dy=%f",dx,dy);
             t++,delay_ms(1),rect1=t1,rect2=t2;
         }
