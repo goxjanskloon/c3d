@@ -1,5 +1,8 @@
 #pragma once
-#include<EGE/graphics.h>
+#ifdef _MSC_VER
+#define NOMINMAX
+#endif
+#include<EGE/ege.h>
 #include<future>
 #include<array>
 #include<cmath>
@@ -51,14 +54,14 @@ public:
     vector3d center()const{
         vector3d c{0,0,0};
         for(const auto &p:*this) c+=p.center();
-        return c/this->size();
+        return c/static_cast<double>(this->size());
     }
 };
 class triface3d:public contnr3d<vector3d,std::array<vector3d,3>>{
 public:
-    color_t color=0;
+    ege::color_t color=0;
     triface3d(){}
-    triface3d(const vector3d &v1,const vector3d &v2,const vector3d &v3,const color_t &color_):contnr3d({v1,v2,v3}),color(color_){}
+    triface3d(const vector3d &v1,const vector3d &v2,const vector3d &v3,const ege::color_t &color_):contnr3d({v1,v2,v3}),color(color_){}
 };
 class renderer3d:public std::list<triface3d*>{
 public:
@@ -71,7 +74,7 @@ public:
 class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
 public:
     rect3d(){}
-    rect3d(const vector3d &a,const vector3d &b,const color_t(&colors)[6]);
+    rect3d(const vector3d &a,const vector3d &b,const ege::color_t(&colors)[6]);
     std::pair<vector3d,vector3d> box()const;
 };
 bool is_collided(const std::pair<vector3d,vector3d> &r1,const std::pair<vector3d,vector3d> &r2);
