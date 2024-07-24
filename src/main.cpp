@@ -3,15 +3,10 @@
 #include<random>
 class render:public renderer3d{
 public:
-    int h[4]{},w[4]{};
     float minfps=__FLT_MAX__,maxfps=-1,curfps=-1;
     double ltm=0,ctm=0;
-    std::future<void> ft[3][3];
     const std::function<void(const int&,const int&,const int&,const int&)> rdfunc=std::bind(render_pixel,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
-    render(const int &xl,const int &yl):renderer3d({0,0,0},{0,0,400},{0,1,0},{1,0,0},xl,yl){
-        h[1]=height*0.3,h[2]=height*0.6,h[3]=height;
-        w[1]=width*0.3,w[2]=width*0.6,w[3]=width;
-    }
+    render(const int &xl,const int &yl):renderer3d({0,0,0},{0,0,400},{0,1,0},{1,0,0},xl,yl){}
     void init(const char *caption){
         initgraph(width,height,INIT_RENDERMANUAL);
         setcaption(caption);
@@ -19,10 +14,11 @@ public:
         setfillcolor(WHITE);
         setfont(20,0,"Consolas");
     }
-    void flush(){
+    void flush(const int &mp){
         cleardevice();
-        for(int i=1;i<4;i++)for(int j=1;j<4;j++) ft[i-1][j-1]=std::async(std::launch::async,rdfunc,w[i-1],w[i],h[j-1],h[j]);
-        for(int i=0;i<3;i++)for(int j=0;j<3;j++) ft[i][j].get();
+        std::vector<std::future<void>> ft(mp);
+        for(int i=0;i<mp;i++) ft[i]=std::async(std::launch::async,rdfunc,width/mp*(i),width/mp*(i+1),0,height);
+        for(auto &p:ft) p.get();
         if((ctm=fclock())-ltm>0.5){
             ltm=ctm;
             curfps=getfps(),maxfps=std::max(maxfps,curfps),minfps=std::min(minfps,curfps);
@@ -63,7 +59,7 @@ void test(){
             r1.rotate(c1,dx,dy,0),r2.rotate(c1,dx,dy,0);
             const auto t1=rect1,t2=rect2;
             rect1.rotate(c1,dx,dy,0),rect2.rotate(c1,dx,dy,0);
-            rd.flush();
+            rd.flush(std::max(std::thread::hardware_concurrency(),1u));
             xyprintf(0,40,"colliding:%s",is_collided(pb1,pb2)?"true":"false");
             xyprintf(0,60,"dx=%f dy=%f",dx,dy);
             t++,delay_ms(1),rect1=t1,rect2=t2;
