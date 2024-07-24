@@ -18,7 +18,7 @@ vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,c
     return *this;
 }
 void renderer3d::render_pixel(const int &lx,const int &rx,const int &ly,const int &ry)const{
-    for(int i=ly;i<ry;i++)for(int j=lx;j<rx;j++){
+    for(int i=ly;i<ry;++i)for(int j=lx;j<rx;++j){
     std::vector<std::pair<double,ege::color_t>> px;
     for(const auto &fp:*this){
         auto &f=*fp;
@@ -35,11 +35,11 @@ void renderer3d::render_pixel(const int &lx,const int &rx,const int &ly,const in
         const double t=e2*qv*det;
         if(t>0) px.emplace_back(t,f.color);
     }
-    std::sort(px.begin(),px.end(),[](const std::pair<double,ege::color_t> &x,const std::pair<double,ege::color_t> &y){return x.first<y.first;});
-    for(auto &p:px){
-        ege::putpixel_alphablend_f(j,i,p.second);
-        if(EGEGET_A(p.second)==0xff) break;
-}}}
+    if(px.empty()) continue;
+    std::sort(px.begin(),px.end(),[](const std::pair<double,ege::color_t> &x,const std::pair<double,ege::color_t> &y){return x.first<y.first;});   
+    int l=0;while(l<px.size()-1&&EGEGET_A(px[l].second)!=255) ++l;
+    for(;l>=0;--l)if(EGEGET_A(px[l].second))ege::putpixel_alphablend_f(j,i,px[l].second);
+}}
 rect3d::rect3d(const vector3d &a,const vector3d &b,const ege::color_t(&colors)[6]):contnr3d({
     triface3d({b.x,a.y,a.z},{a.x,b.y,a.z},{a.x,a.y,a.z},colors[0]),
     triface3d({b.x,a.y,a.z},{a.x,b.y,a.z},{b.x,b.y,a.z},colors[0]),
