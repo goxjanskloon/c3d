@@ -8,7 +8,7 @@ class render:public renderer3d{
 public:
     float minfps=FLT_MAX,maxfps=-1,curfps=-1;
     double ltm=0,ctm=0;
-    render(const int &xl,const int &yl):renderer3d({0,0,0},{0,0,400},{0,1,0},{1,0,0},xl,yl){}
+    render(const int &xl,const int &yl):renderer3d({0,0,0},{0,0,600},{0,1,0},{1,0,0},xl,yl){}
     void init(const char *caption){
         ege::initgraph(width,height,ege::INIT_RENDERMANUAL);
         ege::setcaption(caption);
@@ -19,7 +19,7 @@ public:
     void flush(const int &mp){
         ege::cleardevice();
         std::vector<std::future<void>> ft(mp);
-        for(int i=0;i<mp;++i) ft[i]=std::async(std::launch::async,[&](const int &lx,const int &rx,const int &ly,const int &ry){render_pixel(lx,rx,ly,ry);},width/mp*(i),width/mp*(i+1),0,height);
+        for(int i=0;i<mp;++i) ft[i]=std::async(std::launch::async,[&](const int &lx,const int &rx,const int &ly,const int &ry){render_pixel(lx,rx,ly,ry,nullptr);},width/mp*(i),width/mp*(i+1),0,height);
         for(auto &p:ft) p.get();
         if((ctm=ege::fclock())-ltm>0.5){
             ltm=ctm;
@@ -64,7 +64,7 @@ void test(){
             rd.flush(std::max(std::thread::hardware_concurrency(),1u));
             ege::xyprintf(0,40,"colliding:%s",is_collided(pb1,pb2)?"true":"false");
             ege::xyprintf(0,60,"dx=%f dy=%f",dx,dy);
-            ++t,ege::delay_ms(1),rect1=t1,rect2=t2;
+            ++t,ege::delay_ms(0),rect1=t1,rect2=t2;
         }
     }
 }
