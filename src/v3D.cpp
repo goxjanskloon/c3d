@@ -1,8 +1,9 @@
-#include"v3D.h"
+#include"v3D.hpp"
 #include<algorithm>
 #include<cfloat>
 #include<utility>
 #include<vector>
+namespace v3d{
 vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,const double &dz){
     *this-=c;
     const double sindx=sind(dx),sindy=sind(dy),sindz=sind(dz),cosdx=cosd(dx),cosdy=cosd(dy),cosdz=cosd(dz);
@@ -17,23 +18,27 @@ vector3d &vector3d::rotate(const vector3d &c,const double &dx,const double &dy,c
     *this+=c;
     return *this;
 }
-void renderer3d::render_pixel(const int &lx,const int &rx,const int &ly,const int &ry,const ege::PIMAGE &img)const{
+std::pair<double,ege::color_t> triface3d::pick(const vector3d &pos,const vector3d &ray)const{
+    const auto e1=at(1)-at(0),e2=at(2)-at(0),pv=ray&e2;
+    double det=e1*pv;
+    if(fabs(det)<DBL_EPSILON) return {-DBL_MAX,0};
+    det=1/det;
+    const auto tvec=pos-at(0);
+    const double u=tvec*pv*det;
+    if(u<0||u>1) return {-DBL_MAX,0};
+    const auto qv=tvec&e1;
+    const double v=(ray*qv)*det;
+    if(v<0||u+v>1) return {-DBL_MAX,0};
+    const double t=e2*qv*det;
+    if(t>0) return {t,color};
+    return {-DBL_MAX,0};
+}
+void renderer3d::render(const int &lx,const int &rx,const int &ly,const int &ry,const ege::PIMAGE &img)const{
     for(int i=ly;i<ry;++i)for(int j=lx;j<rx;++j){
     std::vector<std::pair<double,ege::color_t>> px;
     for(const auto &fp:*this){
-        auto &f=*fp;
-        const auto e1=f[1]-f[0],e2=f[2]-f[0],d=facing+ud*(hh-i)+rd*(j-hw),pv=d&e2;
-        double det=e1*pv;
-        if(fabs(det)<DBL_EPSILON) continue;
-        det=1/det;
-        const auto tvec=pos-f[0];
-        const double u=tvec*pv*det;
-        if(u<0||u>1) continue;
-        const auto qv=tvec&e1;
-        const double v=(d*qv)*det;
-        if(v<0||u+v>1) continue;
-        const double t=e2*qv*det;
-        if(t>0) px.emplace_back(t,f.color);
+        auto t=fp->pick(pos,facing+ud*(hh-i)+rd*(j-hw));
+        if(t.first!=-DBL_MAX) px.emplace_back(t);
     }
     if(px.empty()) continue;
     std::sort(px.begin(),px.end(),[](const std::pair<double,ege::color_t> &x,const std::pair<double,ege::color_t> &y){return x.first<y.first;});   
@@ -65,3 +70,4 @@ bool is_collided(const std::pair<vector3d,vector3d> &r1,const std::pair<vector3d
          &&(p22.y<p11.y&&p11.y<p21.y||p22.y<p12.y&&p12.y<p21.y||p12.y<p21.y&&p21.y<p11.y||p12.y<p22.y&&p22.y<p11.y)
          &&(p21.z<p11.z&&p11.z<p22.z||p21.z<p12.z&&p12.z<p22.z||p11.z<p21.z&&p21.z<p12.z||p11.z<p22.z&&p22.z<p12.z);
 }
+}//namespace v3d

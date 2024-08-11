@@ -4,7 +4,7 @@
  * @author goxjansloon
  * @date 2024-7-24
  * @version v0.1.0-alpha
- * @copyright Copyright (C) 2024  goxjanskloon
+ * @copyright Copyright (c) 2024  goxjanskloon
  */
 #pragma once
 #ifdef _MSC_VER
@@ -15,6 +15,8 @@
 #include<array>
 #include<cmath>
 #include<list>
+#include <cfloat>
+namespace v3d{
 inline double sind(const double &a){return sin(0.017453292519943295*a);}//sine in degree
 inline double cosd(const double &a){return cos(0.017453292519943295*a);}//cosine in degree
 ///@brief 3D Vector
@@ -96,16 +98,14 @@ public:
         return c/static_cast<double>(this->size());
     }
 };
-///@brief 3D trangle face.
-class triface3d:public contnr3d<vector3d,std::array<vector3d,3>>{
+///@brief Interface for 'renderer3d::render()'
+class renderable3d{
 public:
-    ege::color_t color=0;///<The color of the face.
-    triface3d(){}
-    ///@param v1,v2,v3 Three vertices of the face
-    triface3d(const vector3d &v1,const vector3d &v2,const vector3d &v3,const ege::color_t &color_):contnr3d({v1,v2,v3}),color(color_){}
+    ///@return Z coordinate and color. return [-DBL_MAX,0] if picked nothing or failed.
+    virtual std::pair<double,ege::color_t> pick(const vector3d &pos,const vector3d &ray)const{return {-DBL_MAX,0};}
 };
 ///@brief Renderer for 3D triangle faces.
-class renderer3d:public std::list<triface3d*>{
+class renderer3d:public std::list<const renderable3d*>{
 public:
     vector3d pos;///<The position of the camera.
     vector3d facing;///<The direction the camera is facing.
@@ -118,7 +118,16 @@ public:
     renderer3d(){}
     renderer3d(const vector3d &pos,const vector3d &facing,const vector3d &ud,const vector3d &rd,const int &width,const int &height):pos(pos),facing(facing),ud(ud),rd(rd),width(width),height(height),hw(width>>1),hh(height>>1){}
     ///<Render the plane in wdith range of [lx,rx), height range of [ly,ry)
-    void render_pixel(const int &lx,const int &rx,const int &ly,const int &ry,const ege::PIMAGE &img)const;
+    void render(const int &lx,const int &rx,const int &ly,const int &ry,const ege::PIMAGE &img)const;
+};
+///@brief 3D trangle face.
+class triface3d:public contnr3d<vector3d,std::array<vector3d,3>>,public renderable3d{
+public:
+    ege::color_t color;///<The color of the face.
+    triface3d(){}
+    ///@param v1,v2,v3 Three vertices of the face
+    triface3d(const vector3d &v1,const vector3d &v2,const vector3d &v3,const ege::color_t &color_):contnr3d({v1,v2,v3}),color(color_){}
+    std::pair<double,ege::color_t> pick(const vector3d &pos,const vector3d &ray)const;
 };
 ///@brief 3D rectangle (not a face!).
 class rect3d:public contnr3d<triface3d,std::array<triface3d,12>>{
@@ -147,24 +156,25 @@ bool is_collided(const std::pair<vector3d,vector3d> &r1,const std::pair<vector3d
 class renderer3d_guard{
 public:
     renderer3d *rd;///<The targeting renderer.
-    std::list<std::list<triface3d*>::iterator> fp;///<The faces to be managed.
+    std::list<std::list<const renderable3d*>::iterator> fp;///<The faces to be managed.
     bool face_removed=false;///Mark if the faces were removed manually before decunstruction
-    template<typename ctrT>
-    renderer3d_guard(contnr3d<triface3d,ctrT> &ctr,renderer3d *const& rd_):rd(rd_){
-        for(auto &p:ctr) rd->push_back(&p),fp.emplace_back(prev(rd->end()));
+    template<typename objT,typename ctrT,typename =typename std::enable_if<std::is_base_of<v3d::renderable3d,objT>::value>::type>
+    renderer3d_guard(const contnr3d<objT,ctrT> &ctr,renderer3d *const& rd_):rd(rd_){
+        for(const auto &p:ctr) rd->emplace_back(&p),fp.emplace_back(prev(rd->end()));
     }
     ~renderer3d_guard(){
         if(!face_removed)
-            for(auto &p:fp) rd->erase(p);
+            for(const auto &p:fp) rd->erase(p);
     }
     ///@brief Manually remove the faces from the renderer before deconstruction.
     bool remove(){
         if(!face_removed){
             face_removed=1;
-            for(auto &p:fp) rd->erase(p);
+            for(const auto &p:fp) rd->erase(p);
             fp.erase(fp.begin(),fp.end());
             return 1;
         }
         return 0;
     }
 };
+}//namespace v3d
