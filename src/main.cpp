@@ -1,32 +1,34 @@
-#include"v3D.hpp"
+#include"v3d.hpp"
 #include<cfloat>
-#include<functional>
 #include<random>
 #define clr(x) ege::color_t(ege::x)
 #define cla(x,y) EGECOLORA(ege::x,y)
-class myrenderer:public v3d::renderer3d{
+class myrenderer:public v3d::renderer{
 public:
     float minfps=FLT_MAX,maxfps=-1,curfps=-1;
     double ltm=0,ctm=0;
-    myrenderer(const int &xl,const int &yl):renderer3d({0,0,0},{0,0,600},{0,1,0},{1,0,0},xl,yl){}
-    void init(const char *caption){
+    myrenderer(const int &xl,const int &yl):renderer({0,0,0},{0,0,600},{0,1,0},{1,0,0},xl,yl){}
+    void init(const char *caption)const{
         ege::initgraph(width,height,ege::INIT_RENDERMANUAL);
         ege::setcaption(caption);
         ege::setbkmode(TRANSPARENT);
         ege::setfillcolor(ege::WHITE);
         ege::setfont(20,0,"Consolas");
     }
+    void render_range(const int &lx,const int &rx,const int &ly,const int &ry)const{
+        for(int i=ly;i<ry;++i)for(int j=lx;j<rx;++j)ege::putpixel_f(j,i,render(j,i));
+    }
     void flush(const int &mp){
         ege::cleardevice();
         std::vector<std::future<void>> ft(mp);
-        for(int i=0;i<mp;++i) ft[i]=std::async(std::launch::async,[&](const int &lx,const int &rx,const int &ly,const int &ry){render(lx,rx,ly,ry,nullptr);},width/mp*(i),width/mp*(i+1),0,height);
+        for(int i=0;i<mp;++i) ft[i]=std::async(std::launch::async,render_range,this,width/mp*i,width/mp*(i+1),0,height);
         for(auto &p:ft) p.get();
         if((ctm=ege::fclock())-ltm>0.5){
             ltm=ctm;
             curfps=ege::getfps(),maxfps=std::max(maxfps,curfps),minfps=std::min(minfps,curfps);
         }
         ege::xyprintf(0,0,"FPS(MIN/CUR/MAX):%f/%f/%f",minfps,curfps,maxfps);
-        ege::ege_fillrect(0,20,(curfps-minfps)/(maxfps-minfps)*width,20);
+        ege::ege_fillrect(0,20,(curfps-minfps)/(maxfps-minfps)*static_cast<float>(width),20);
     }
     ~myrenderer(){ege::closegraph();}
 };
@@ -34,11 +36,11 @@ void test(){
     std::random_device rdv;
     std::mt19937 gen(rdv());
     std::uniform_int_distribution<> dist(0,360);
-    v3d::rect3d rect1({-50,50,450},{50,-50,550},{clr(BLUE),clr(RED),clr(YELLOW),clr(GREEN),clr(BROWN),clr(CYAN)}),rect1t=rect1,
+    v3d::rect rect1({-50,50,450},{50,-50,550},{clr(BLUE),clr(RED),clr(YELLOW),clr(GREEN),clr(BROWN),clr(CYAN)}),rect1t=rect1,
                 rect2({-50,350,450},{50,450,550},{clr(BLUE),clr(RED),clr(YELLOW),clr(GREEN),clr(BROWN),clr(CYAN)}),rect2t=rect2,r1,r2;
     myrenderer rd(1000,600);
-    v3d::renderer3d_guard rg1(rect1,&rd),rg2(rect2,&rd),rgr1(r1,&rd),rgr2(r2,&rd);
-    rd.init("v3D Collision Test");
+    v3d::renderer_guard rg1(rect1,&rd),rg2(rect2,&rd),rgr1(r1,&rd),rgr2(r2,&rd);
+    rd.init("v3d Collision Test");
     const auto c1=rect1.center();
     for(double dx=0,dy=0;ege::is_run();rect1=rect1t,rect2=rect2t){
         rect1.rotate({0,0,500},dist(gen),dist(gen),dist(gen));
@@ -51,17 +53,17 @@ void test(){
             rect2+={tx,ty,tz};
             const auto pb1=rect1.box(),pb2=rect2.box();
             if(ege::keystate('C')){
-                r1=v3d::rect3d(pb1.first,pb1.second,{cla(BLUE,100),cla(RED,100),cla(YELLOW,100),cla(GREEN,100),cla(BROWN,100),cla(CYAN,100)});
-                r2=v3d::rect3d(pb2.first,pb2.second,{cla(BLUE,100),cla(RED,100),cla(YELLOW,100),cla(GREEN,100),cla(BROWN,100),cla(CYAN,100)});
+                r1=v3d::rect(pb1.first,pb1.second,{cla(BLUE,100),cla(RED,100),cla(YELLOW,100),cla(GREEN,100),cla(BROWN,100),cla(CYAN,100)});
+                r2=v3d::rect(pb2.first,pb2.second,{cla(BLUE,100),cla(RED,100),cla(YELLOW,100),cla(GREEN,100),cla(BROWN,100),cla(CYAN,100)});
             }
             else{
-                r1=v3d::rect3d(pb1.first,pb1.second,{cla(BLUE,0),cla(RED,0),cla(YELLOW,0),cla(GREEN,0),cla(BROWN,0),cla(CYAN,0)});
-                r2=v3d::rect3d(pb2.first,pb2.second,{cla(BLUE,0),cla(RED,0),cla(YELLOW,0),cla(GREEN,0),cla(BROWN,0),cla(CYAN,0)});
+                r1=v3d::rect(pb1.first,pb1.second,{cla(BLUE,0),cla(RED,0),cla(YELLOW,0),cla(GREEN,0),cla(BROWN,0),cla(CYAN,0)});
+                r2=v3d::rect(pb2.first,pb2.second,{cla(BLUE,0),cla(RED,0),cla(YELLOW,0),cla(GREEN,0),cla(BROWN,0),cla(CYAN,0)});
             }
             r1.rotate(c1,dx,dy,0),r2.rotate(c1,dx,dy,0);
             const auto t1=rect1,t2=rect2;
             rect1.rotate(c1,dx,dy,0),rect2.rotate(c1,dx,dy,0);
-            rd.flush(std::max(std::thread::hardware_concurrency(),1u));
+            rd.flush(static_cast<int>(std::thread::hardware_concurrency()));
             ege::xyprintf(0,40,"colliding:%s",is_collided(pb1,pb2)?"true":"false");
             ege::xyprintf(0,60,"dx=%f dy=%f",dx,dy);
             ++t,ege::delay_ms(0),rect1=t1,rect2=t2;
