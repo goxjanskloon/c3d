@@ -29,6 +29,7 @@ std::pair<double,ege::color_t> triface::pick(const vector &pos,const vector &ray
     const auto qv=tvec&e1;
     if(const double v=ray*qv*det;v<0||u+v>1) return {-DBL_MAX,0};
     if(const double t=e2*qv*det;t>0) return {t,color};
+    //TODO:Ray Tracing
     return {-DBL_MAX,0};
 }
 ege::color_t renderer::render(const int &x,const int &y,const int &rtd)const{

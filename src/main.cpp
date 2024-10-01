@@ -16,7 +16,7 @@ public:
         ege::setfont(20,0,"Consolas");
     }
     void render_range(const int &lx,const int &rx,const int &ly,const int &ry)const{
-        for(int i=ly;i<ry;++i)for(int j=lx;j<rx;++j)ege::putpixel_f(j,i,render(j,i));
+        for(int i=ly;i<ry;++i)for(int j=lx;j<rx;++j)ege::putpixel_f(j,i,render(j,i,0));
     }
     void flush(const int &mp){
         ege::cleardevice();
