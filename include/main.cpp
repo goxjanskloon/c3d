@@ -1,5 +1,8 @@
 #include"v3d.hpp"
 #include<cfloat>
+#include<ege.h>
+#include<future>
+#include<png.h>
 #include<random>
 #define clr(x) ege::color_t(ege::x)
 #define cla(x,y) EGECOLORA(ege::x,y)
@@ -7,7 +10,7 @@ class myrenderer:public v3d::renderer{
 public:
     float minfps=FLT_MAX,maxfps=-1,curfps=-1;
     double ltm=0,ctm=0;
-    myrenderer(const int &xl,const int &yl):renderer({0,0,0},{0,0,600},{0,1,0},{1,0,0},xl,yl){}
+    myrenderer(const int &xl,const int &yl):renderer({0,0,0},{0,0,600},{0,1,0},{1,0,0},xl,yl,ege::BLACK){}
     void init(const char *caption)const{
         ege::initgraph(width,height,ege::INIT_RENDERMANUAL);
         ege::setcaption(caption);
@@ -48,8 +51,9 @@ void test(){
         const auto c2=rect2.center();
         for(double tx=(c1.x-c2.x)/60,ty=(c1.y-c2.y)/60,tz=(c1.z-c2.z)/60,t=1;t<=120&&ege::is_run();){
             int mx,my;
+            const int hh=rd.height>>1,hw=rd.width>>1;
             ege::mousepos(&mx,&my);
-            dx=(rd.hh-my)*180.0/rd.hh,dy=(rd.hw-mx)*180.0/rd.hw;
+            dx=(hh-my)*180.0/hh,dy=(hw-mx)*180.0/hw;
             rect2+={tx,ty,tz};
             const auto pb1=rect1.box(),pb2=rect2.box();
             if(ege::keystate('C')){
@@ -69,5 +73,8 @@ void test(){
             ++t,ege::delay_ms(0),rect1=t1,rect2=t2;
         }
     }
+}
+void test2(){
+
 }
 int main(){test();return 0;}
