@@ -26,9 +26,10 @@ namespace v3d{
         vector operator/(const double &a)const{return {x/a,y/a,z/a};}
         vector &operator/=(const double &a){x/=a,y/=a,z/=a;return *this;}
         vector operator&(const vector &v)const{return {y*v.z-z*v.y,z*v.x-x*v.z,x*v.y-y*v.x};}
-        vector &rotate(const vector &base,const double &angle){
+        vector &rotate(const vector &base,const vector &axis,const double &angle){
+            *this-=base;
             const double cosa=cos(angle);
-            return (operator*=(cosa))+=base*(1-cosa)*(base**this)+base*sin(angle)&*this;
+            return *this=*this*cosa+axis*(1-cosa)*(axis**this)+(axis*sin(angle)&*this)+base;
         }
         double norm()const{return sqrt(x*x+y*y+z*z);}
     };
@@ -36,8 +37,8 @@ namespace v3d{
     public:
         collection()=default;
         explicit collection(const ctrT &objs_):ctrT(objs_){}
-        collection &rotate(const vector &base,const double &angle){
-            for(auto &p:*this) p.rotate(base,angle);
+        collection &rotate(const vector &base,const vector &axis,const double &angle){
+            for(auto &p:*this) p.rotate(base,axis,angle);
             return *this;
         }
     };
