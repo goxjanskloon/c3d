@@ -67,12 +67,12 @@ namespace v3d{
             for(const auto &fp:*this)
                 if(const auto t=fp->pick(pos,ray,rtd);t.get()!=nullptr) px.emplace_back(t->dist,t->color);
             if(px.empty()) return bgcolor;
-            int mi=1;
-            for(int i=2;i<px.size();++i)
+            int mi=0;
+            for(int i=1;i<px.size();++i)
                 if(px[i].first<px[mi].first) mi=i;
             return px[mi].second;
         }
-        color_t render(const int &x,const int &y,const int &rtd)const{
+        color_t render_ssaa(const int &x,const int &y,const int &rtd)const{
             unsigned int r=0u,g=0u,b=0u;
             const int hh=height>>1,hw=width>>1;
             for(int i=0;i<SSAA_SIZE;++i)
@@ -80,14 +80,26 @@ namespace v3d{
                     const auto c=render(facing+ud*(hh-y+SSAA_OFFSET[i])+rd*(x-hw+SSAA_OFFSET[j]),rtd);
                     r+=c>>16&0xff,g+=c>>8&0xff,b+=c&0xff;
                 }
-            return r/SSAA_COUNT<<16|g/SSAA_COUNT<<8|r/SSAA_COUNT;
+            return r/SSAA_COUNT<<16|g/SSAA_COUNT<<8|b/SSAA_COUNT;
+        }
+        color_t render(const int &x,const int &y,const int &rtd)const{
+            using pdc=std::pair<double,color_t>;
+            const int hh=height>>1,hw=width>>1;
+            std::vector<pdc> px;
+            for(const auto &fp:*this)
+                if(const auto t=fp->pick(pos,facing+ud*(hh-y)+rd*(x-hw),rtd);t.get()!=nullptr) px.emplace_back(t->dist,t->color);
+            if(px.empty()) return bgcolor;
+            int mi=0;
+            for(int i=1;i<px.size();++i)
+                if(px[i].first<px[mi].first) mi=i;
+            return px[mi].second;
         }
     };
     class triface:public collection<vector,std::array<vector,3>>,public renderable{
     public:
         color_t color;
         triface():color(){}
-        triface(const vector &v1,const vector &v2,const vector &v3,const color_t &):collection({v1,v2,v3}),color(color){}
+        triface(const vector &v1,const vector &v2,const vector &v3,const color_t &color):collection({v1,v2,v3}),color(color){}
         virtual std::shared_ptr<pickpoint_t> pick(const vector&pos,const vector&ray,const int&rtd)const override{
             const auto e1=at(1)-at(0),e2=at(2)-at(0),pv=ray&e2;
             double det=e1*pv;
