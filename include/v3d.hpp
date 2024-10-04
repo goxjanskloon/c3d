@@ -32,6 +32,8 @@ namespace v3d{
             return *this=*this*cosa+axis*(1-cosa)*(axis**this)+(axis*sin(angle)&*this)+base;
         }
         double norm()const{return sqrt(x*x+y*y+z*z);}
+        vector unit()const{return operator/(norm());}
+        vector &unitize(){return operator/=(norm());}
     };
     template<typename objT,typename ctrT=std::list<objT>> class collection:public ctrT{
     public:
@@ -44,7 +46,6 @@ namespace v3d{
     };
     class renderable{
     public:
-        virtual ~renderable()=default;
         struct pickpoint_t{
             vector normal;
             color_t color;
@@ -117,7 +118,6 @@ namespace v3d{
     };
     class rect:public collection<triface,std::array<triface,12>>{
     public:
-        rect()=default;
         template<typename arrT> rect(const vector &a,const vector &b,const arrT &colors):collection({
             triface({b.x,a.y,a.z},{a.x,b.y,a.z},a,colors[0]),
             triface({b.x,a.y,a.z},{a.x,b.y,a.z},{b.x,b.y,a.z},colors[0]),
@@ -131,6 +131,20 @@ namespace v3d{
             triface({b.x,a.y,b.z},a,{b.x,a.y,a.z},colors[4]),
             triface(b,{a.x,b.y,a.z},{a.x,b.y,b.z},colors[5]),
             triface(b,{a.x,b.y,a.z},{b.x,b.y,a.z},colors[5])}){}
+    };
+    class sphere:public renderable{
+    public:
+        vector center;
+        double radius;
+        color_t color;
+        sphere(const vector &center,const double &radius,const color_t &color):center(center),radius(radius),color(color){}
+        virtual std::shared_ptr<pickpoint_t> pick(const vector &pos,const vector &ray,const int &rtd)const override{
+            const auto cp=(pos-center);
+            const double b=ray*cp,d=b*b-cp*cp+radius*radius;
+            if(d<0) return nullptr;
+            const double t=(-b-sqrt(d))/pow(ray.norm(),2);
+            return std::shared_ptr<pickpoint_t>{new pickpoint_t{(pos+ray*t-center).unit(),color,t}};
+        }
     };
     class renderer_guard{
     public:
