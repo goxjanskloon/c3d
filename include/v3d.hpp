@@ -112,7 +112,7 @@ namespace v3d{
             if(u<0||u>1) return nullptr;
             const auto qv=tvec&e1;
             if(const double v=ray*qv*det;v<0||u+v>1) return nullptr;
-            if(const double t=e2*qv*det;t>0) return std::shared_ptr<pickpoint_t>{new pickpoint_t{e1&e2,color,t}};
+            if(const double t=e2*qv*det;t>0) return std::shared_ptr<pickpoint_t>{new pickpoint_t{e1&e2,color,t*ray.norm()}};
             return nullptr;
         }
     };
@@ -139,11 +139,12 @@ namespace v3d{
         color_t color;
         sphere(const vector &center,const double &radius,const color_t &color):center(center),radius(radius),color(color){}
         virtual std::shared_ptr<pickpoint_t> pick(const vector &pos,const vector &ray,const int &rtd)const override{
+            const auto ru=ray.unit();
             const auto cp=(pos-center);
-            const double b=ray*cp,d=b*b-cp*cp+radius*radius;
+            const double b=ru*cp,d=b*b-cp*cp+radius*radius;
             if(d<0) return nullptr;
-            const double t=(-b-sqrt(d))/pow(ray.norm(),2);
-            return std::shared_ptr<pickpoint_t>{new pickpoint_t{(pos+ray*t-center).unit(),color,t}};
+            if(const double t=-b-sqrt(d);t>0) return std::shared_ptr<pickpoint_t>{new pickpoint_t{(cp+ray*t).unit(),color,t}};
+            return nullptr;
         }
     };
     class renderer_guard{

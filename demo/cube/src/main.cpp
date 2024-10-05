@@ -9,10 +9,12 @@ int main(){
     constexpr v3d::color_t BLUE=0x0000ff,RED=0xff0000,YELLOW=0xffff00,GREEN=0x00ff00,BROWN=0xa52a2a,CYAN=0x00ffff,BLACK=0u;
     v3d::color_t colors[]{BLUE,RED,YELLOW,GREEN,BROWN,CYAN};
     v3d::rect rect({-5.0,5.0,-5.0},{5.0,-5.0,5.0},colors);
+    v3d::sphere sphere({-10,0.0,0.0},5,0xabcdefu);
     rect.rotate({0.0,0.0,0.0},{0.0,1.0,0.0},M_PI_4);
     rect.rotate({0.0,0.0,0.0},{1.0,0.0,0.0},-M_PI_4*2/3);
     v3d::renderer renderer({0.0,0.0,-15.0},{0.0,0.0,300.0},{0.0,1.0,0.0},{1.0,0.0,0.0},WIDTH,HEIGHT,BLACK);
-    v3d::renderer_guard rdg(rect,&renderer);
+    v3d::renderer_guard rgr(rect,&renderer);
+    renderer.emplace_back(&sphere);
     std::ofstream image("cube.ppm");
     image<<"P3\n"<<WIDTH<<' '<<HEIGHT<<"\n255\n";
     for(int i=0;i<HEIGHT;++i)
