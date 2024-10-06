@@ -41,6 +41,7 @@ namespace v3d{
         double brightn;
         light_t():color(),brightn(0.0){};
         light_t(const color_t &color,const double &brightn):color(color),brightn(brightn){}
+        light_t operator*(const double &rate){return {color,brightn*rate};}
     };
     light_t blend(const std::initializer_list<light_t> &light){
         light_t res;
@@ -63,6 +64,7 @@ namespace v3d{
             vector point,normal;
             light_t light;
             double dist,roughn;
+            
         };
         virtual std::shared_ptr<pickpoint_t> pick(const vector &pos,const vector &ray)const=0;
     };
@@ -82,29 +84,29 @@ namespace v3d{
                 if(const auto t=fp->pick(pos,ray);t.get()!=nullptr&&(point.get()==nullptr||t->dist<point->dist)) point=t;
             if(point.get()==nullptr) return bglight;
             const auto &[cpoint,normal,light,dist,roughn]=*point.get();
-            if(rtd) return blend({light,bglight,render(cpoint,ray-normal*(ray*normal)*2,rtd-1)/*std::min(1-roughn,(ray*-1)*normal)*/});
+            if(rtd) return blend({light,bglight,render(cpoint,ray-normal*(ray*normal)*2,rtd-1)*std::min(1-roughn,(ray*-1)*normal)});
             return blend({light,bglight});
         }
         color_t render_ssaa(const int &x,const int &y,const int &rtd)const{
-            unsigned int r=0u,g=0u,b=0u;
+            light_t res;
             const int hh=height>>1,hw=width>>1;
             for(int i=0;i<SSAA_SIZE;++i)
                 for(int j=0;j<SSAA_SIZE;++j){
                     const auto c=render(pos,(facing+ud*(hh-y+SSAA_OFFSET[i])+rd*(x-hw+SSAA_OFFSET[j])).unit(),rtd);
-                    r+=color_r(c),g+=color_g(c),b+=color_b(c);
+                    res.color+=c.color,res.brightn+=c.brightn;
                 }
-            return r/SSAA_COUNT<<16|g/SSAA_COUNT<<8|b/SSAA_COUNT;
+            return res.color/SSAA_COUNT*res.brightn/SSAA_COUNT;
         }
         color_t render(const int &x,const int &y,const int &rtd)const{
-            return render(pos,(facing+ud*((height>>1)-y)+rd*(x-(width>>1))).unit(),rtd);
+            const auto t=render(pos,(facing+ud*((height>>1)-y)+rd*(x-(width>>1))).unit(),rtd);
+            return t.color/t.brightn;
         }
     };
     class triface:public collection<vector,std::array<vector,3>>,public renderable{
     public:
-        color_t color;
+        light_t light;
         double roughn;
-        triface():color(){}
-        triface(const vector &v1,const vector &v2,const vector &v3,const color_t &color,const double &roughn):collection({v1,v2,v3}),color(color),roughn(roughn){}
+        triface(const vector &v1,const vector &v2,const vector &v3,const light_t &light,const double &roughn):collection({v1,v2,v3}),light(light),roughn(roughn){}
         virtual std::shared_ptr<pickpoint_t> pick(const vector&pos,const vector&ray)const override{
             const auto e1=at(1)-at(0),e2=at(2)-at(0),pv=ray&e2;
             double det=e1*pv;
@@ -115,7 +117,7 @@ namespace v3d{
             if(u<0||u>1) return nullptr;
             const auto qv=tvec&e1;
             if(const double v=ray*qv*det;v<0||u+v>1) return nullptr;
-            if(const double t=e2*qv*det;t>EPSILON) return std::make_shared<pickpoint_t>(pos+ray*t,(e1&e2).unit(),color,t,roughn);
+            if(const double t=e2*qv*det;t>EPSILON) return std::make_shared<pickpoint_t>(pos+ray*t,(e1&e2).unit(),light,t,roughn);
             return nullptr;
         }
     };
@@ -139,13 +141,13 @@ namespace v3d{
     public:
         vector center;
         double radius,roughn,brightn;
-        color_t color;
-        sphere(const vector &center,const double &radius,const color_t &color,const double &roughn):center(center),radius(radius),color(color),roughn(roughn){}
+        light_t light;
+        sphere(const vector &center,const double &radius,const light_t &light,const double &roughn):center(center),radius(radius),light(light),roughn(roughn){}
         virtual std::shared_ptr<pickpoint_t> pick(const vector &pos,const vector &ray)const override{
             const auto cp=(pos-center);
             const double b=ray*cp,d=b*b-cp*cp+radius*radius;
             if(d<0) return nullptr;
-            if(const double t=-b-sqrt(d);t>EPSILON) return std::make_shared<pickpoint_t>(pos+ray*t,(cp+ray*t).unit(),color,t,roughn);
+            if(const double t=-b-sqrt(d);t>EPSILON) return std::make_shared<pickpoint_t>(pos+ray*t,(cp+ray*t).unit(),light,t,roughn);
             return nullptr;
         }
     };
