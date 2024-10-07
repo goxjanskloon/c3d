@@ -1,5 +1,4 @@
 #pragma once
-#include<algorithm>
 #include<array>
 #include<cfloat>
 #include<cmath>
@@ -75,7 +74,7 @@ namespace v3d{
         Ray ray;
         UInt width,height;
         Color bgcolor;
-        Renderer(CR<Ray> pos,CR<Vector> ud,CR<Vector> rd,CR<UInt> width,CR<UInt> height,CR<Color> bgcolor):ray(ray),ud(ud),rd(rd),width(width),height(height),bgcolor(bgcolor){}
+        Renderer(CR<Ray> ray,CR<Vector> ud,CR<Vector> rd,CR<UInt> width,CR<UInt> height,CR<Color> bgcolor):ray(ray),ud(ud),rd(rd),width(width),height(height),bgcolor(bgcolor){}
         Color render(CR<Ray> ray,CR<UInt> rtd)const{
             Ptr<const Renderable::Point> point(nullptr);
             for(const auto &fp:*this)
@@ -85,16 +84,16 @@ namespace v3d{
             if(rtd) return bgcolor+color*roughn+render({cpoint,ray.ray-normal*(ray.ray*normal)*2},rtd-1)*((ray.ray*-1.0)*normal)*(1.0-roughn);
             return bgcolor+color*roughn;
         }
-        Color render_ssaa(CR<UInt> x,CR<UInt> y,CR<UInt> rtd)const{
+        Color renderSsaa(CR<UInt> x,CR<UInt> y,CR<UInt> rtd)const{
             Color res;
-            const auto hh=height>>1,hw=width>>1;
+            const Int hh=height>>1,hw=width>>1;
             for(UInt i=0;i<SSAA_SIZE;++i)
                 for(UInt j=0;j<SSAA_SIZE;++j)
-                    res+=render({ray.pos,(ray.ray+ud*(hh-y+SSAA_OFFSET[i])+rd*(x-hw+SSAA_OFFSET[j])).unit()},rtd);
+                    res+=render({ray.pos,(ray.ray+ud*(hh-Int(y)+SSAA_OFFSET[i])+rd*(Int(x)-hw+SSAA_OFFSET[j])).unit()},rtd);
             return res/=SSAA_COUNT;
         }
         Color render(CR<UInt> x,CR<UInt> y,CR<UInt> rtd)const{
-            return render({ray.pos,(ray.ray+ud*((height>>1)-y)+rd*(x-(width>>1))).unit()},rtd);
+            return render({ray.pos,(ray.ray+ud*(Int(height>>1)-Int(y))+rd*(Int(x)-Int(width>>1))).unit()},rtd);
         }
     };
     /*class TriFace:public Collection<Vector,Array<Vector,3>>,public Renderable{
@@ -142,7 +141,9 @@ namespace v3d{
             const auto cp=(ray.pos-center);
             const Real b=ray.ray*cp,d=b*b-cp*cp+radius*radius;
             if(d<0) return nullptr;
-            if(const Real t=-b-sqrt(d);t>EPSILON) return makePtr<Point>(ray.at(t),(cp+ray.ray*t).unit(),color,t,roughn);
+            Real t=-b-sqrt(d);
+            if(t<EPSILON) t+=sqrt(d);
+            if(t>EPSILON) return makePtr<Point>(ray.at(t),(cp+ray.ray*t).unit(),color,t,roughn);
             return nullptr;
         }
     };

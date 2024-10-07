@@ -29,7 +29,7 @@ int main(){
     image<<"P3\n"<<WIDTH<<' '<<HEIGHT<<"\n255\n";
     for(int i=0,l=0;i<HEIGHT;++i)
         for(int j=0;j<WIDTH;++j){
-            const auto c=renderer.render_ssaa(j,i,8);
+            const auto c=renderer.renderSsaa(j,i,8);
             image<<d2c(c.x)<<' '<<d2c(c.y)<<' '<<d2c(c.z)<<' ';
             if((i*HEIGHT+j)*PGBAR_LEN/(WIDTH*HEIGHT)>l) ++l,std::cerr<<'=';
         }
