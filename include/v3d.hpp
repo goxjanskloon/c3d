@@ -7,10 +7,9 @@
 namespace v3d{
     using Real=double;
     using Int=int;
-    using UInt=unsigned int;
     template<typename E> using Ptr=std::shared_ptr<E>;
     template<typename E> using List=std::list<E>;
-    template<typename E,UInt L> using Array=std::array<E,L>;
+    template<typename E,Int L> using Array=std::array<E,L>;
     template<typename T> using CR=const T&;
     constexpr Real EPSILON=1e-10;
     template<typename E,typename... A> Ptr<E> makePtr(A&&... args){return std::make_shared<E>(args...);}
@@ -68,14 +67,14 @@ namespace v3d{
     };
     class Renderer:public List<Ptr<const Renderable>>{
     public:
-        static constexpr UInt SSAA_SIZE=3,SSAA_COUNT=SSAA_SIZE*SSAA_SIZE;
+        static constexpr Int SSAA_SIZE=3,SSAA_COUNT=SSAA_SIZE*SSAA_SIZE;
         static constexpr Real SSAA_OFFSET[SSAA_SIZE]{-0.33,0.0,0.33};
         Vector ud,rd;
         Ray ray;
-        UInt width,height;
+        Int width,height;
         Color bgcolor;
-        Renderer(CR<Ray> ray,CR<Vector> ud,CR<Vector> rd,CR<UInt> width,CR<UInt> height,CR<Color> bgcolor):ray(ray),ud(ud),rd(rd),width(width),height(height),bgcolor(bgcolor){}
-        Color render(CR<Ray> ray,CR<UInt> rtd)const{
+        Renderer(CR<Ray> ray,CR<Vector> ud,CR<Vector> rd,CR<Int> width,CR<Int> height,CR<Color> bgcolor):ray(ray),ud(ud),rd(rd),width(width),height(height),bgcolor(bgcolor){}
+        Color render(CR<Ray> ray,CR<Int> rtd)const{
             Ptr<const Renderable::Point> point(nullptr);
             for(const auto &fp:*this)
                 if(const auto t=fp->pick(ray);t.get()!=nullptr&&(point.get()==nullptr||t->dist<point->dist)) point=t;
@@ -84,16 +83,16 @@ namespace v3d{
             if(rtd) return bgcolor+color*roughn+render({cpoint,ray.ray-normal*(ray.ray*normal)*2},rtd-1)*((ray.ray*-1.0)*normal)*(1.0-roughn);
             return bgcolor+color*roughn;
         }
-        Color renderSsaa(CR<UInt> x,CR<UInt> y,CR<UInt> rtd)const{
+        Color renderSsaa(CR<Int> x,CR<Int> y,CR<Int> rtd)const{
             Color res;
             const Int hh=height>>1,hw=width>>1;
-            for(UInt i=0;i<SSAA_SIZE;++i)
-                for(UInt j=0;j<SSAA_SIZE;++j)
-                    res+=render({ray.pos,(ray.ray+ud*(hh-Int(y)+SSAA_OFFSET[i])+rd*(Int(x)-hw+SSAA_OFFSET[j])).unit()},rtd);
+            for(Int i=0;i<SSAA_SIZE;++i)
+                for(Int j=0;j<SSAA_SIZE;++j)
+                    res+=render({ray.pos,(ray.ray+ud*(hh-y+SSAA_OFFSET[i])+rd*(x-hw+SSAA_OFFSET[j])).unit()},rtd);
             return res/=SSAA_COUNT;
         }
-        Color render(CR<UInt> x,CR<UInt> y,CR<UInt> rtd)const{
-            return render({ray.pos,(ray.ray+ud*(Int(height>>1)-Int(y))+rd*(Int(x)-Int(width>>1))).unit()},rtd);
+        Color render(CR<Int> x,CR<Int> y,CR<Int> rtd)const{
+            return render({ray.pos,(ray.ray+ud*((height>>1)-y)+rd*(x-(width>>1))).unit()},rtd);
         }
     };
     /*class TriFace:public Collection<Vector,Array<Vector,3>>,public Renderable{

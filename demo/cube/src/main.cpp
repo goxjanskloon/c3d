@@ -14,17 +14,19 @@ public:
     Ptr<Point> pick(CR<Ray> ray)const override{
         double det=e1*(ray.ray&e2);
         if(fabs(det)<v3d::EPSILON) return nullptr;
-        if(const double t=e2*((ray.pos-Vector{0.0,y,0.0})&e1)/det;t>EPSILON) return makePtr<Point>(ray.at(t),normal,color,t,roughn);
+        if(const double t=e2*((ray.pos-Vector{0.0,y,0.0})&e1)/det;t>EPSILON) return makePtr<Point>(ray.at(t),normal,(fabs(fmod(ray.at(t).x,10.0))<5.0)^(fabs(fmod(ray.at(t).z,10.0))<5.0)?color:Vector{255.0,255.0,255.0}-color,t,roughn);
         return nullptr;
     }
 };
 unsigned int d2c(CR<Real> x){return std::min<unsigned int>(255u,x);}
 int main(){
-    constexpr UInt WIDTH=1000u,HEIGHT=600u,PGBAR_LEN=100u;
-    constexpr Color BLUE{0.0,0.0,255.0},RED{255.0,0.0,0.0},YELLOW{0.0,255.0,255.0},GREEN{0.0,255.0,0.0},BROWN{165.0,42.0,42.0},CYAN{0.0,255.0,255.0},WHITE{255.0,255.0,255.0};
+    constexpr Int WIDTH=1000u,HEIGHT=600u,PGBAR_LEN=100u;
+    constexpr Color BLUE{0.0,0.0,255.0},RED{255.0,0.0,0.0},YELLOW{255.0,255.0,0.0},GREEN{0.0,255.0,0.0},BROWN{165.0,42.0,42.0},CYAN{0.0,255.0,255.0},WHITE{255.0,255.0,255.0};
     Renderer renderer({{0,0,-20.0},{0.0,0.0,300.0}},{0.0,1.0,0.0},{1.0,0.0,0.0},WIDTH,HEIGHT,WHITE*0.2);
-    //renderer.emplace_back(new Sphere({-12.0,0.0,0.0},5.0,RED,0.9));
-    renderer.emplace_back(new Ground(-10.0,1.0,CYAN));
+    renderer.emplace_back(new Sphere({-9.0,0.0,0.0},5.0,RED,0.0));
+    renderer.emplace_back(new Sphere({0.0,0.0,0.0},4.0,YELLOW,0.9));
+    renderer.emplace_back(new Sphere({9.0,0.0,0.0},5.0,BROWN,0.5));
+    renderer.emplace_back(new Ground(-8.0,0.7,CYAN));
     std::ofstream image("cube.ppm");
     image<<"P3\n"<<WIDTH<<' '<<HEIGHT<<"\n255\n";
     for(int i=0,l=0;i<HEIGHT;++i)
@@ -33,5 +35,6 @@ int main(){
             image<<d2c(c.x)<<' '<<d2c(c.y)<<' '<<d2c(c.z)<<' ';
             if((i*HEIGHT+j)*PGBAR_LEN/(WIDTH*HEIGHT)>l) ++l,std::cerr<<'=';
         }
+    std::cerr<<'\n';
     return 0;
 }
