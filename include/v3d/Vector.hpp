@@ -26,8 +26,8 @@ namespace v3d{
             Vector &unitize(){return operator/=(norm());}
             static Vector randomUnit(){
                 static RandomEngine engine{RandomDevice{}()};
-                static std::uniform_real_distribution<double> dist{};
-                return Vector{dist(engine),dist(engine),dist(engine)}.unit();
+                static std::uniform_real_distribution<double> dist{0.0,1.0};
+                return Vector{dist(engine)-0.5,dist(engine)-0.5,dist(engine)-0.5}.unit();
             }
         };
     

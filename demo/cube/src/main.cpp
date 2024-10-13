@@ -25,9 +25,9 @@ int main(){
     constexpr Color BLUE{0.0,0.0,1.0},RED{1.0,0.0,0.0},YELLOW{1.0,1.0,0.0},GREEN{0.0,1.0,0.0},BROWN{0.647,0.165,0.165},CYAN{0.0,1.0,1.0},WHITE{1.0,1.0,1.0};
     Renderer renderer({{0,0,-20.0},{0.0,0.0,300.0}},{0.0,1.0,0.0},{1.0,0.0,0.0},WIDTH,HEIGHT,{},1000);
     renderer.emplace_back(new Sphere({-9.0,0.0,0.0},5.0,RED,{},0.9));
-    renderer.emplace_back(new Sphere({0.0,0.0,0.0},4.0,YELLOW,YELLOW,0.0));
-    //renderer.emplace_back(new Sphere({9.0,0.0,0.0},5.0,BROWN,{}));
-    //renderer.emplace_back(new Ground(-8.0,0.7,CYAN));
+    renderer.emplace_back(new Sphere({0.0,0.0,0.0},4.0,YELLOW,YELLOW*7.0,0.0));
+    renderer.emplace_back(new Sphere({9.0,0.0,0.0},5.0,BROWN,{},0.0));
+    renderer.emplace_back(new Ground(-8.0,0.7,CYAN));
     ofstream image("cube.ppm");
     image<<"P3\n"<<WIDTH<<' '<<HEIGHT<<"\n255\n";
     for(int i=0,l=0;i<HEIGHT;++i)
