@@ -20,6 +20,7 @@ namespace v3d{
             Vector operator/(CR<Real> a)const{return {x/a,y/a,z/a};}
             Vector &operator/=(CR<Real> a){x/=a,y/=a,z/=a;return *this;}
             Vector operator&(CR<Vector> v)const{return {y*v.z-z*v.y,z*v.x-x*v.z,x*v.y-y*v.x};}
+            Vector operator-()const{return {-x,-y,-z};}
             Vector &rotate(CR<Ray> axis,CR<Real> angle);
             Real norm()const{return std::sqrt(x*x+y*y+z*z);}
             Vector unit()const{return operator/(norm());}

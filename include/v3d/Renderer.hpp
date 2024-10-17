@@ -19,7 +19,8 @@ namespace v3d{
                 if(const auto t=fp->pick(ray);t.get()!=nullptr&&(point.get()==nullptr||t->dist<point->dist)) point=t;
             if(point.get()==nullptr) return {};
             const auto [cpoint,normal,color,light,dist,roughn]=*point.get();
-            if(rtd) return render({cpoint,((ray.ray-normal*(ray.ray*normal)*2)+Vector::randomUnit()*roughn).unit()},rtd-1).scale(color)+light;
+            if(rtd) return render({cpoint,((ray.ray-normal*(ray.ray*normal)*2).unit()*2.0+Vector::randomUnit()*roughn).unit()},rtd-1).scale(color)+light;
+            //if(rtd) return render({cpoint,((ray.ray-normal*(ray.ray*normal)*2).unit()*2.0+Vector::randomUnit()*roughn).unit()},rtd-1).scale(color)*((-ray.ray)*normal)+light;
             return light;
         }
         Color render(CR<Int> x,CR<Int> y,CR<Int> rtd)const{

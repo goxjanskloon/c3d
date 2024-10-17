@@ -1,4 +1,3 @@
-#include "v3d/Vector.hpp"
 #include<cmath>
 #include<cstring>
 #include<fstream>
@@ -11,23 +10,23 @@ class Ground:public Renderable{
 public:
     Real y;
     Color color;
-    Ground(CR<Real> y,CR<Real> roughn,CR<Color> color):y(y),color(color){}
+    Ground(CR<Real> y,CR<Color> color):y(y),color(color){}
     Ptr<Point> pick(CR<Ray> ray)const override{
         double det=e1*(ray.ray&e2);
         if(fabs(det)<v3d::EPSILON) return nullptr;
-        if(const double t=e2*((ray.pos-Vector{0.0,y,0.0})&e1)/det;t>EPSILON) return makePtr<Point>(ray.at(t),normal,(fmod(abs(ray.at(t).x),10.0)<5.0)^(fmod(abs(ray.at(t).z),10.0)<5.0)?color:Vector{255.0,255.0,255.0}-color,Vector{},t);
+        if(const double t=e2*((ray.pos-Vector{0.0,y,0.0})&e1)/det;t>EPSILON) return makePtr<Point>(ray.at(t),normal,(ray.at(t).x>0?fmod(abs(ray.at(t).x),3.0)<1.5:fmod(abs(ray.at(t).x),3.0)>1.5)^(ray.at(t).z>0?fmod(abs(ray.at(t).z),3.0)<1.5:fmod(abs(ray.at(t).z),3.0)>1.5)?color:Vector{1.0,1.0,1.0}-color,Vector{},t,1.0);
         return nullptr;
     }
 };
 unsigned int d2c(CR<Real> x){return min<unsigned int>(255u,x*255);}
 int main(){
-    constexpr Int WIDTH=1000,HEIGHT=600,PGBAR_LEN=100;
+    constexpr Int WIDTH=600,HEIGHT=360,PGBAR_LEN=100;
     constexpr Color BLUE{0.0,0.0,1.0},RED{1.0,0.0,0.0},YELLOW{1.0,1.0,0.0},GREEN{0.0,1.0,0.0},BROWN{0.647,0.165,0.165},CYAN{0.0,1.0,1.0},WHITE{1.0,1.0,1.0};
-    Renderer renderer({{0,0,-20.0},{0.0,0.0,300.0}},{0.0,1.0,0.0},{1.0,0.0,0.0},WIDTH,HEIGHT,{},1000);
-    renderer.emplace_back(new Sphere({-9.0,0.0,0.0},5.0,RED,{},0.9));
-    renderer.emplace_back(new Sphere({0.0,0.0,0.0},4.0,YELLOW,YELLOW*7.0,0.0));
-    renderer.emplace_back(new Sphere({9.0,0.0,0.0},5.0,BROWN,{},0.0));
-    renderer.emplace_back(new Ground(-8.0,0.7,CYAN));
+    Renderer renderer({{0,0,-20.0},{0.0,0.0,300.0}},{0.0,1.0,0.0},{1.0,0.0,0.0},WIDTH,HEIGHT,{},100);
+    renderer.emplace_back(new Sphere({-9.0,0.0,0.0},5.0,RED,{},1.0));
+    renderer.emplace_back(new Sphere({0.0,0.0,0.0},4.0,WHITE,WHITE,1.0));
+    renderer.emplace_back(new Sphere({9.0,0.0,0.0},5.0,BLUE,{},1.0));
+    renderer.emplace_back(new Ground(-4.0,CYAN));
     ofstream image("cube.ppm");
     image<<"P3\n"<<WIDTH<<' '<<HEIGHT<<"\n255\n";
     for(int i=0,l=0;i<HEIGHT;++i)
