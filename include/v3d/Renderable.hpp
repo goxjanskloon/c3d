@@ -1,5 +1,6 @@
 #pragma once
 #include<v3d/definitions.hpp>
+#include<v3d/Aabb.hpp>
 #include<v3d/Vector.hpp>
 namespace v3d{
     class Renderable{
@@ -12,5 +13,6 @@ namespace v3d{
         };
         virtual ~Renderable()=default;
         virtual Ptr<Point> pick(CR<Ray> ray)const=0;
+        virtual Aabb getAabb()const=0;
     };
 }

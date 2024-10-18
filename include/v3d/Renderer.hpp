@@ -4,7 +4,7 @@
 #include<v3d/Renderable.hpp>
 #include<v3d/Vector.hpp>
 namespace v3d{
-    class Renderer:public List<Ptr<const Renderable>>{
+    class Renderer{
     public:
         mutable RandomEngine engine{RandomDevice{}()};
         mutable RealDist dist{-0.5,0.5};
@@ -12,15 +12,14 @@ namespace v3d{
         Ray ray;
         Int width,height,samples;
         Color bgcolor;
-        Renderer(CR<Ray> ray,CR<Vector> ud,CR<Vector> rd,CR<Int> width,CR<Int> height,CR<Color> bgcolor,CR<Int> samples):ray(ray),ud(ud),rd(rd),width(width),height(height),bgcolor(bgcolor),samples(samples){}
+        Ptr<const Renderable> world;
+        Renderer(CR<Ptr<const Renderable>> world,CR<Ray> ray,CR<Vector> ud,CR<Vector> rd,CR<Int> width,CR<Int> height,CR<Color> bgcolor,CR<Int> samples):world(world),ray(ray),ud(ud),rd(rd),width(width),height(height),bgcolor(bgcolor),samples(samples){}
         Color render(CR<Ray> ray,CR<Int> rtd)const{
-            Ptr<const Renderable::Point> point(nullptr);
-            for(const auto &fp:*this)
-                if(const auto t=fp->pick(ray);t.get()!=nullptr&&(point.get()==nullptr||t->dist<point->dist)) point=t;
-            if(point.get()==nullptr) return {};
+            Ptr<const Renderable::Point> point(world->pick(ray));
+            if(point==nullptr) return {};
             const auto [cpoint,normal,color,light,dist,roughn]=*point.get();
-            //if(rtd) return render({cpoint,((ray.ray-normal*(ray.ray*normal)*2).unit()*2.0+Vector::randomUnit()*roughn).unit()},rtd-1).scale(color)+light;
-            if(rtd) return render({cpoint,((ray.ray-normal*(ray.ray*normal)*2).unit()*2.0+Vector::randomUnit()*roughn).unit()},rtd-1).scale(color)*((-ray.ray)*normal)+light;
+            if(rtd) return render({cpoint,((ray.ray-normal*(ray.ray*normal)*2).unit()*2.0+Vector::randomUnit()*roughn).unit()},rtd-1).scale(color)+light;
+            //if(rtd) return render({cpoint,((ray.ray-normal*(ray.ray*normal)*2).unit()*2.0+Vector::randomUnit()*roughn).unit()},rtd-1).scale(color)*((-ray.ray)*normal)+light;
             return light;
         }
         Color render(CR<Int> x,CR<Int> y,CR<Int> rtd)const{
