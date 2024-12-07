@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(v3d)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+set(CXX_STANDARD 20)
 include_directories(${INCLUDE_DIRECTORIES} include)
 add_subdirectory(demo)
