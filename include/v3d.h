@@ -35,6 +35,7 @@ namespace v3d{
     Vector unit(const Vector &v){return v/norm(v);}
     Vector rotate(const Vector &v,const Vector &origin,const Vector &axis,const double &a){return rotate(v-origin,axis,a)+origin;}
     Vector rotate(const Vector &v,const Vector &axis,const double &a){const double c=cos(a);return v*c+axis*(1-c)*(v*axis)+(v&axis)*sin(a);}
+    bool operator==(const Vector &a,const Vector &b){return a.x==b.x&&a.y==b.y&&a.z==b.z;}
     template<typename G>Vector RandUnitVec3(G &generator){
         static std::uniform_real_distribution<> d(-1,1);
         const double b=d(g),r=sqrt(b*(b-1))*2,l=2*M_PI*d(g);
@@ -56,20 +57,26 @@ namespace v3d{
     public:
         virtual ~Hittable()=0;
         virtual HitRecord hit(const Vector &origin,const Vector &ray)const=0;
-        virtual Aabb aabb()=0;
+        virtual Aabb aabb()const=0;
     };
     class Material{
     public:
         virtual ~Material()=0;
-        virtual double possibility(const Vector &theoretic,const Vector &real)=0;
-        virtual Vector generate(const Vector &normal,const Vector &theoretic)=0;
+        virtual double possibility(const Vector &theoretic,const Vector &real)const=0;
+        virtual Vector generate(const Vector &normal,const Vector &theoretic)const=0;
+    };
+    class Mirror:public Material{
+    public:
+        double possibility(const Vector &theoretic,const Vector &real)const override{return real==theoretic?1:0;}
+        Vector generate(const Vector &normal,const Vector &theoretic)const override{return theoretic;}
     };
     class Aabb{
     public:
         Interval x,y,z;
+        Aabb(const Interval &x,const Interval &y,const Interval &z):x(x),y(y),z(z){}
         Aabb(const Vector &a,const Vector &b):x{std::min(a.x,b.x),std::max(a.x,b.x)},y{std::min(a.y,b.y),std::max(a.y,b.y)},z{std::min(a.z,b.z),std::max(a.z,b.z)}{}
         Aabb(const Aabb &a,const Aabb &b):x(unite(a.x,b.x)),y(unite(a.y,b.y)),z(unite(a.z,b.z)){}
-        bool hit(const Vector &origin,const Vector &ray){
+        bool hit(const Vector &origin,const Vector &ray)const{
             //TODO:sync with dev-java
         }
     };
@@ -77,6 +84,9 @@ namespace v3d{
     public:
         Vector center;
         double radius;
-        //TODO:implement the Hittable interface
+        HitRecord hit(const Vector &origin,const Vector &ray)const override{
+            //TODO:sync with dev-java
+        }
+        Aabb aabb()const override{return{{center.x-radius,center.x+radius},{center.y-radius,center.y+radius},{center.z-radius,center.z+radius}};}
     };
 }
