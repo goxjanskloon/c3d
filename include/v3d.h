@@ -1,22 +1,23 @@
 #pragma once
-#define _USE_MATH_DEFINES
-#include<cmath>
+#include<limits>
 #include<random>
 namespace v3d{
+    constexpr double INF=std::numeric_limits<double>::infinity(),PI=std::acos(-1);
     class Interval{
     public:
         double min,max;
         const double &clamp(const double &a)const{return a<min?min:a>max?max:a;}
         bool contain(const double &a)const{return min<=a&&a<=max;}
         bool empty()const{return min>max;}
+        static const Interval universe,empty;
     };
-    static const Interval kUniverseInterval{-DBL_MAX,DBL_MAX},kEmptyInterval{DBL_MAX,-DBL_MAX};
+    const Interval Interval::universe{-INF,INF},Interval::Empty{INF,-INF};
     Interval unite(const Interval &a,const Interval &b){return{std::min(a.min,b.min),std::max(a.max,b.max)};}
     class Vector{
     public:
         double x,y,z;
         Vector &rotate(const Vector &origin,const Vector &axis,const double &a){return *this-=origin,*this=rotate(*this,axis,a)+origin;}
-        Vector &rotate(const Vector &axis,const double &a){const double c=cos(a);return *this=*this*c+axis*(1-c)*(*this*axis)+(*this&axis)*sin(a);}
+        Vector &rotate(const Vector &axis,const double &a){const double c=std::cos(a);return *this=*this*c+axis*(1-c)*(*this*axis)+(*this&axis)*std::sin(a);}
         Vector &unitize(){return *this/=norm(*this);}
     };
     using Color=Vector;
@@ -34,17 +35,17 @@ namespace v3d{
     double norm(const Vector &v){return sqrt(normsq(v));}
     Vector unit(const Vector &v){return v/norm(v);}
     Vector rotate(const Vector &v,const Vector &origin,const Vector &axis,const double &a){return rotate(v-origin,axis,a)+origin;}
-    Vector rotate(const Vector &v,const Vector &axis,const double &a){const double c=cos(a);return v*c+axis*(1-c)*(v*axis)+(v&axis)*sin(a);}
+    Vector rotate(const Vector &v,const Vector &axis,const double &a){const double c=std::cos(a);return v*c+axis*(1-c)*(v*axis)+(v&axis)*std::sin(a);}
     bool operator==(const Vector &a,const Vector &b){return a.x==b.x&&a.y==b.y&&a.z==b.z;}
     template<typename G>Vector RandUnitVec3(G &generator){
         static std::uniform_real_distribution<> d(-1,1);
         const double b=d(g),r=sqrt(b*(b-1))*2,l=2*M_PI*d(g);
-        return{cos(l)*r,sin(l)*r,1-2*b};
+        return{std::cos(l)*r,std::sin(l)*r,1-2*b};
     }
     template<typename G>Vector RandVec3OnUnitHemisphere(G &generator,const Vector &n){
         static const std::uniform_real_distribution<> d(-1,1);
         const double b=d(g),r=sqrt(b*(b-1))*2,l=2*M_PI*d(g);
-        Vector v(cos(l)*r,sin(l)*r,1-2*b);
+        Vector v(std::cos(l)*r,std::sin(l)*r,1-2*b);
         return v*n>0?v:-v;
     }
     struct HitRecord{
