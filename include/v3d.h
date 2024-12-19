@@ -81,6 +81,17 @@ namespace v3d{
             //TODO:sync with dev-java
         }
     };
+    class BvhTree:public Hittable{
+    public:
+        //TODO:sync with dev-java
+        std::shared_ptr<Hittable> left,right;
+        BvhTree(std::vector<Hittable> &hittables){
+            //TODO:sync with dev-java
+        }
+        bool hit(const Vector &origin,const Vector &ray)const{
+            //TODO:sync with dev-java
+        }
+    };
     class Sphere:public Hittable{
     public:
         Vector center;
