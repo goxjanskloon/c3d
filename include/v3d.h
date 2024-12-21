@@ -2,7 +2,7 @@
 #include<limits>
 #include<random>
 namespace v3d{
-    constexpr double INF=std::numeric_limits<double>::infinity(),PI=std::acos(-1);
+    constexpr double INF=std::numeric_limits<double>::infinity(),PI=std::acos(-1),EPSILON=1e-5;
     class Interval{
     public:
         double min,max;
@@ -11,7 +11,7 @@ namespace v3d{
         bool empty()const{return min>max;}
         static const Interval universe,empty;
     };
-    const Interval Interval::universe{-INF,INF},Interval::Empty{INF,-INF};
+    const Interval Interval::universe{-INF,INF},Interval::empty{INF,-INF};
     Interval unite(const Interval &a,const Interval &b){return{std::min(a.min,b.min),std::max(a.max,b.max)};}
     class Vector{
     public:
@@ -48,16 +48,20 @@ namespace v3d{
         Vector v(std::cos(l)*r,std::sin(l)*r,1-2*b);
         return v*n>0?v:-v;
     }
+    struct Light{
+        Color color;
+        double brightness;
+    };
     struct HitRecord{
         Vector point,normal;
-        Color color;
-        double dist,bright;
+        std::shared_ptr<Light> light;
+        double dist;
         std::shared_ptr<Material> material;
     };
     class Hittable{
     public:
         virtual ~Hittable()=0;
-        virtual HitRecord hit(const Vector &origin,const Vector &ray)const=0;
+        virtual std::shared_ptr<HitRecord> hit(const Vector &origin,const Vector &ray)const=0;
         virtual Aabb aabb()const=0;
     };
     class Material{
@@ -88,7 +92,7 @@ namespace v3d{
         BvhTree(std::vector<Hittable> &hittables){
             //TODO:sync with dev-java
         }
-        bool hit(const Vector &origin,const Vector &ray)const{
+        std::shared_ptr<HitRecord> hit(const Vector &origin,const Vector &ray)const override{
             //TODO:sync with dev-java
         }
     };
@@ -96,8 +100,22 @@ namespace v3d{
     public:
         Vector center;
         double radius;
-        HitRecord hit(const Vector &origin,const Vector &ray)const override{
+        Light light;
+        Material material;
+        std::shared_ptr<HitRecord> hit(const Vector &origin,const Vector &ray)const override{
             //TODO:sync with dev-java
+            const Vector co=origin-center;
+            const double b=ray*co,d=b*b-normsq(co)+radius*radius;
+            if(d<0)
+                return nullptr;
+            const double sd=std::sqrt(d);
+            double t=-b-sd;
+            if(t<EPSILON)
+                t+=sd*2;
+            if(t<EPSILON)
+                return nullptr;
+            const Vector point=origin+ray*t;
+            return new HitRecord{point,(point-center).unitize(),light,t,material};
         }
         Aabb aabb()const override{return{{center.x-radius,center.x+radius},{center.y-radius,center.y+radius},{center.z-radius,center.z+radius}};}
     };
