@@ -1,4 +1,4 @@
-.gitignore
+CMakeSettings.json
 build
 .vscode
 .cache
