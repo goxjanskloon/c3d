@@ -1,21 +1,34 @@
-#pragma once
+/**
+ * @brief 
+ */
+#ifndef GOXJANSKLOON_V3D_H_
+#define GOXJANSKLOON_V3D_H_
+#include<algorithm>
 #include<limits>
+#include<memory>
 #include<random>
+#include<ranges>
 namespace v3d{
 constexpr double INF=std::numeric_limits<double>::infinity(),PI=std::acos(-1),EPSILON=1e-5;
-using Dimension=char;
-constexpr Dimension X='X',Y='Y',Z='Z';
 class Interval{
 public:
     double min,max;
-    const double& clamp(const double& a)const{return a<min?min:a>max?max:a;}
-    bool contain(const double& a)const{return min<=a&&a<=max;}
-    bool valid()const{return min>max;}
+    [[nodiscard]] const double& clamp(const double& a)const{return a<min?min:a>max?max:a;}
+    [[nodiscard]] bool contain(const double& a)const{return min<=a&&a<=max;}
+    [[nodiscard]] bool valid()const{return min>max;}
     Interval& intersect(const Interval& a){return min=std::max(min,a.min),max=std::min(max,a.max),*this;}
+    Interval& unite(const Interval &a){return min=std::min(min,a.min),max=std::max(max,a.max),*this;}
+    [[nodiscard]] double length()const{return max-min;}
     static const Interval universe,empty;
 };
 const Interval Interval::universe{-INF,INF},Interval::empty{INF,-INF};
 inline Interval unite(const Interval& a,const Interval& b){return{std::min(a.min,b.min),std::max(a.max,b.max)};}
+inline Interval unite(const std::initializer_list<const Interval&> &intervals){
+    Interval ret=Interval::empty;
+    for(const auto& i:intervals)
+        ret=unite(ret,i);
+    return ret;
+}
 inline Interval intersect(const Interval& a,const Interval &b){return{std::max(a.min,b.min),std::min(a.max,b.max)};}
 class Vector{
 public:
@@ -58,8 +71,8 @@ template<typename G>Vector RandVec3OnUnitHemisphere(G& generator,const Vector& n
 class Material{
 public:
     virtual ~Material()=0;
-    virtual double possibility(const Vector& theoretic,const Vector& real)const=0;
-    virtual Vector generate(const Vector& normal,const Vector& theoretic)const=0;
+    [[nodiscard]] virtual double possibility(const Vector& theoretic,const Vector& real)const=0;
+    [[nodiscard]] virtual Vector generate(const Vector& normal,const Vector& theoretic)const=0;
 };
 class Aabb{
 public:
@@ -67,15 +80,21 @@ public:
     Aabb(const Interval& x,const Interval& y,const Interval& z):x(x),y(y),z(z){}
     Aabb(const Vector& a,const Vector& b):x{std::min(a.x,b.x),std::max(a.x,b.x)},y{std::min(a.y,b.y),std::max(a.y,b.y)},z{std::min(a.z,b.z),std::max(a.z,b.z)}{}
     Aabb(const Aabb& a,const Aabb& b):x(v3d::unite(a.x,b.x)),y(v3d::unite(a.y,b.y)),z(v3d::unite(a.z,b.z)){}
-    bool hit(const Vector& origin,const Vector& ray,Interval interval)const{
+    [[nodiscard]] bool hit(const Vector& origin,const Vector& ray,Interval interval)const{
         return !(interval.intersect({(x.min-origin.x)/ray.x,(x.max-origin.x)/ray.x}).valid()
                ||interval.intersect({(y.min-origin.y)/ray.y,(y.max-origin.y)/ray.y}).valid()
                ||interval.intersect({(z.min-origin.z)/ray.z,(z.max-origin.z)/ray.z}).valid());
     }
-    Aabb& unite(const Aabb& a){return x.intersect(a.x),y.intersect(a.y),z.intersect(a.z),*this;}
+    Aabb& unite(const Aabb& a){return x.unite(a.x),y.unite(a.y),z.unite(a.z),*this;}
     static const Aabb empty;
 };
 const Aabb Aabb::empty{Interval::empty,Interval::empty,Interval::empty};
+inline Aabb unite(const std::initializer_list<const Aabb&>& aabbs){
+    Aabb ret=Aabb::empty;
+    for(const auto& aabb:aabbs)
+        ret.unite(aabb);
+    return ret;
+}
 struct Light{
     Color color;
     double brightness;
@@ -89,46 +108,50 @@ struct HitRecord{
 class Hittable{
 public:
     virtual ~Hittable()=0;
-    virtual std::shared_ptr<HitRecord> hit(const Vector& origin,const Vector& ray,const Interval& interval)const=0;
-    virtual Aabb aabb()const=0;
+    [[nodiscard]] virtual std::shared_ptr<HitRecord> hit(const Vector& origin,const Vector& ray,const Interval& interval)const=0;
+    [[nodiscard]] virtual Aabb aabb()const=0;
 };
 class Mirror final:public Material{
 public:
-    double possibility(const Vector& theoretic,const Vector& real)const override{return real==theoretic?1:0;}
-    Vector generate(const Vector& normal,const Vector& theoretic)const override{return theoretic;}
+    [[nodiscard]] double possibility(const Vector& theoretic,const Vector& real)const override{return real==theoretic?1:0;}
+    [[nodiscard]] Vector generate(const Vector& normal,const Vector& theoretic)const override{return theoretic;}
 };
 class BvhTree:public Hittable{
+    BvhTree(std::vector<std::shared_ptr<const Hittable>>& objects,std::vector<Aabb>& aabbs){
+        //TODO:sync with dev-java
+        if(const std::size_t n=objects.size();n==1)
+            left=objects.front(),aabb_=aabbs.front(),right=nullptr;
+        else if(n==2)
+            left=objects.front(),right=objects.back(),aabb_={aabbs.front(),aabbs.back()};
+        else{
+            aabb_=unite(aabbs);
+            const double xLength=aabb_.x.length(),yLength=aabb_.y.length(),zLength=aabb_.z.length();
+            if(xLength>yLength&&xLength>zLength)
+                std::ranges::sort(objects,[](const std::shared_ptr<const Hittable>&a,const std::shared_ptr<const Hittable>&b){ return a-> })
+        }
+    }
 public:
     //TODO:sync with dev-java
     std::shared_ptr<const Hittable> left,right;
-    Aabb aabb;
+    Aabb aabb_;
     explicit BvhTree(std::vector<std::shared_ptr<const Hittable>>& objects){
-        //TODO:sync with dev-java
-        const std::size_t n=objects.size();
-        if(!n)
-            left=right=nullptr,aabb=Aabb::empty;
-        else if(n==1)
-            aabb=(left=objects.front())->aabb(),right=nullptr;
-        else if(n==2)
-            aabb={(left=objects.front())->aabb(),(right=objects.back())->aabb()};
-        else{
-            Aabb tb=Aabb::empty;
-            for(const auto &o:objects)
-                tb.unite(o->aabb());
-
-        }
+        std::vector<Aabb> aabbs;
+        for(const auto &o:objects)
+            aabbs.emplace_back(o->aabb());
+        *this(objects,aabbs);
     }
-    std::shared_ptr<HitRecord> hit(const Vector& origin,const Vector& ray,const Interval&interval)const override{
+    [[nodiscard]] std::shared_ptr<HitRecord> hit(const Vector& origin,const Vector& ray,const Interval&interval)const override{
         //TODO:sync with dev-java
     }
+    [[nodiscard]] Aabb aabb()const override{return aabb_;}
 };
-class Sphere:public Hittable{
+class Sphere final:public Hittable{
 public:
     Vector center;
     double radius;
     std::shared_ptr<Light> light;
     std::shared_ptr<Material> material;
-    std::shared_ptr<HitRecord> hit(const Vector& origin,const Vector& ray,const Interval&interval)const override{
+    [[nodiscard]] std::shared_ptr<HitRecord> hit(const Vector& origin,const Vector& ray,const Interval&interval)const override{
         //TODO:sync with dev-java
         const Vector co=origin-center;
         const double b=ray*co,d=b*b-normSq(co)+radius*radius;
@@ -143,6 +166,7 @@ public:
         const Vector point=origin+ray*t;
         return std::make_shared<HitRecord>(HitRecord{point,(point-center).unitize(),light,t,material});
     }
-    Aabb aabb()const override{return{{center.x-radius,center.x+radius},{center.y-radius,center.y+radius},{center.z-radius,center.z+radius}};}
+    [[nodiscard]] Aabb aabb()const override{return{{center.x-radius,center.x+radius},{center.y-radius,center.y+radius},{center.z-radius,center.z+radius}};}
 };
 }
+#endif
