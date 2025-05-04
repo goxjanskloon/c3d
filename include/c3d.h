@@ -6,7 +6,7 @@
 #include<random>
 #include<ranges>
 namespace c3d{
-    constexpr float INF=std::numeric_limits<float>::infinity(),PI=std::acosf(-1);
+    constexpr float INF=std::numeric_limits<float>::infinity(),PI=std::acos(-1.f);
     struct interval{
         float min,max;
         [[nodiscard]] float clamp(const float a)const{
@@ -17,6 +17,10 @@ namespace c3d{
         }
         [[nodiscard]] bool empty()const{
             return min>max;
+        }
+        void expand(const float a){
+            min-=a;
+            max+=a;
         }
         interval &intersect(const interval &a){
             if(a.min>min)
@@ -120,6 +124,7 @@ namespace c3d{
     }
     struct ray{
         vector origin,direction;
+        float time;
         [[nodiscard]] vector at(const float a)const{
             return origin+direction*a;
         }
@@ -142,12 +147,6 @@ namespace c3d{
         }
     };
     const aabb empty_aabb{empty_interval,empty_interval,empty_interval};
-    inline aabb unite(const std::initializer_list<aabb> &aabbs){
-        aabb r=empty_aabb;
-        for(const auto &p:aabbs)
-            r.unite(p);
-        return r;
-    }
     class material;
     struct hit_record{
         vector point,normal;
@@ -157,13 +156,13 @@ namespace c3d{
     class hittable{
     public:
         virtual ~hittable()=0;
-        [[nodiscard]] virtual std::shared_ptr<hit_record> hit(const vector& origin,const vector& ray,const interval& interval_)const=0;
+        [[nodiscard]] virtual std::shared_ptr<hit_record> hit(const ray &ray_,const interval &interval_)const=0;
         [[nodiscard]] virtual aabb get_aabb()const=0;
     };
     class pdf{
     public:
         virtual ~pdf()=0;
-        [[nodiscard]] virtual float value(const vector& direction)const=0;
+        [[nodiscard]] virtual float value(const vector &direction)const=0;
         [[nodiscard]] virtual vector generate()const=0;
     };
     struct scatter_record{
@@ -210,8 +209,8 @@ namespace c3d{
         std::shared_ptr<const hittable> left,right;
         aabb aabb_;
         explicit bvh_tree(std::vector<std::shared_ptr<const hittable>> &objects):bvh_tree(objects,0,static_cast<int>(objects.size())-1){}
-        [[nodiscard]] std::shared_ptr<hit_record> hit(const vector &origin,const vector &ray,const interval &interval_)const override{
-            auto left_hit=left==nullptr?nullptr:left->hit(origin,ray,interval_),right_hit=right==nullptr?nullptr:right->hit(origin,ray,interval_);
+        [[nodiscard]] std::shared_ptr<hit_record> hit(const ray &ray_,const interval &interval_)const override{
+            auto left_hit=left==nullptr?nullptr:left->hit(ray_,interval_),right_hit=right==nullptr?nullptr:right->hit(origin,ray,interval_);
             if(left_hit==nullptr) return right_hit;
             if(right_hit==nullptr) return left_hit;
             return left_hit->distance<right_hit->distance?left_hit:right_hit;
@@ -222,12 +221,12 @@ namespace c3d{
     };
     class sphere final:public hittable{
     public:
-        vector center;
+        vector center0,center1;
         float radius;
         std::shared_ptr<material> material_;
-        [[nodiscard]] std::shared_ptr<hit_record> hit(const vector &origin,const vector &ray,const interval &interval_)const override{
-            const vector co=origin-center;
-            const float b=ray*co,d=b*b-self_dot(co)+radius*radius;
+        [[nodiscard]] std::shared_ptr<hit_record> hit(const ray &ray_,const interval &interval_)const override{
+            const vector co=ray_.origin-center;
+            const float b=ray_.direction*co,d=b*b-self_dot(co)+radius*radius;
             if(d<0)
                 return nullptr;
             const float sd=std::sqrt(d);
@@ -240,6 +239,12 @@ namespace c3d{
             const vector point=origin+ray*t;
             return std::make_shared<hit_record>(hit_record{point,(point-center).unitize(),light,t,material_});
         }
-        [[nodiscard]] Aabb aabb()const override{return{{center.x-radius,center.x+radius},{center.y-radius,center.y+radius},{center.z-radius,center.z+radius}};}
+        [[nodiscard]] aabb get_aabb()const override{
+            aabb aabb_(center0,center1);
+            aabb_.x.expand(radius);
+            aabb_.y.expand(radius);
+            aabb_.z.expand(radius);
+            return aabb_;
+        }
     };
 }
