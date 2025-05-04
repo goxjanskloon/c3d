@@ -6,7 +6,7 @@
 #include<random>
 #include<ranges>
 namespace c3d{
-    constexpr float INF=std::numeric_limits<float>::infinity(),PI=std::acos(-1.f);
+    constexpr float INF=std::numeric_limits<float>::infinity(),PI=std::numbers::pi_v<float>;
     struct interval{
         float min,max;
         [[nodiscard]] float clamp(const float a)const{
@@ -112,13 +112,15 @@ namespace c3d{
     inline void vector::unitize(){
         *this/=norm(*this);
     }
-    static const std::uniform_real_distribution<float> unit_float_distribution(-1,1);
-    template<typename G> vector random_unit(G &g){
-        const float b=unit_float_distribution(g),r=std::sqrt(b*(b-1))*2,l=2*PI*unit_float_distribution(g);
+    static std::uniform_real_distribution<float> unit_float_distribution(-1,1);
+    static std::random_device random_device_;
+    static std::mt19937 generator{random_device_()};
+    vector random_unit(){
+        const float b=unit_float_distribution(generator),r=std::sqrt(b*(b-1))*2,l=2*PI*unit_float_distribution(generator);
         return{std::cos(l)*r,std::sin(l)*r,1-2*b};
     }
     template<typename G> vector random_on_unit_hemisphere(G &g,const vector &n){
-        const float b=unit_float_distribution(g),r=std::sqrt(b*(b-1))*2,l=2*PI*unit_float_distribution(g);
+        const float b=unit_float_distribution(generator),r=std::sqrt(b*(b-1))*2,l=2*PI*unit_float_distribution(generator);
         const vector v{std::cos(l)*r,std::sin(l)*r,1-2*b};
         return v*n>0?v:-v;
     }
@@ -165,6 +167,15 @@ namespace c3d{
         [[nodiscard]] virtual float value(const vector &direction)const=0;
         [[nodiscard]] virtual vector generate()const=0;
     };
+    class sphere_pdf:public pdf{
+    public:
+        [[nodiscard]] float value(const vector &direction)const override{
+            return 1/(4*PI);
+        }
+        [[nodiscard]] vector generate() const override {
+            return random_unit();
+        }
+    };
     struct scatter_record{
         std::shared_ptr<pdf> pdf_;
         vector attenuation;
@@ -210,7 +221,7 @@ namespace c3d{
         aabb aabb_;
         explicit bvh_tree(std::vector<std::shared_ptr<const hittable>> &objects):bvh_tree(objects,0,static_cast<int>(objects.size())-1){}
         [[nodiscard]] std::shared_ptr<hit_record> hit(const ray &ray_,const interval &interval_)const override{
-            auto left_hit=left==nullptr?nullptr:left->hit(ray_,interval_),right_hit=right==nullptr?nullptr:right->hit(origin,ray,interval_);
+            auto left_hit=left==nullptr?nullptr:left->hit(ray_,interval_),right_hit=right==nullptr?nullptr:right->hit(ray_,interval_);
             if(left_hit==nullptr) return right_hit;
             if(right_hit==nullptr) return left_hit;
             return left_hit->distance<right_hit->distance?left_hit:right_hit;
@@ -221,11 +232,11 @@ namespace c3d{
     };
     class sphere final:public hittable{
     public:
-        vector center0,center1;
+        vector center,movement;
         float radius;
         std::shared_ptr<material> material_;
         [[nodiscard]] std::shared_ptr<hit_record> hit(const ray &ray_,const interval &interval_)const override{
-            const vector co=ray_.origin-center;
+            const vector c=center+movement*ray_.time,co=ray_.origin-c;
             const float b=ray_.direction*co,d=b*b-self_dot(co)+radius*radius;
             if(d<0)
                 return nullptr;
@@ -236,11 +247,11 @@ namespace c3d{
                 if(!interval_.contain(t))
                     return nullptr;
             }
-            const vector point=origin+ray*t;
-            return std::make_shared<hit_record>(hit_record{point,(point-center).unitize(),light,t,material_});
+            const vector p=ray_.at(t);
+            return std::make_shared<hit_record>(hit_record{p,unit(p-c),t,(std::atan2(-p.z,p.x)+PI)/(2*PI),std::acos(-p.y)/PI,material_});
         }
         [[nodiscard]] aabb get_aabb()const override{
-            aabb aabb_(center0,center1);
+            aabb aabb_(center,center+movement);
             aabb_.x.expand(radius);
             aabb_.y.expand(radius);
             aabb_.z.expand(radius);
