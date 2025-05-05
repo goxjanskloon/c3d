@@ -1,17 +1,14 @@
 #pragma once
-#include<algorithm>
 #include<execution>
-#include<limits>
-#include<memory>
-#include<numbers>
-#include<random>
-#include<ranges>
+#include<c3d/aabb.h>
+#include<c3d/hittable.h>
+#include<c3d/vector.h>
 namespace c3d{
     class bvh_tree final:public hittable{
         bvh_tree(std::vector<std::shared_ptr<const hittable>> &objects,const int l,const int r):aabb_(){
             aabb_=empty_aabb;
             if(const std::size_t n=objects.size();n==1) {
-                aabb_=(left=objects.front())->get_aabb();
+                aabb_=(left=objects.front())->bounding_box();
                 right=nullptr;
             } else if(n==2)
                 aabb_={(left=objects.front())->get_aabb(),(right=objects.back())->get_aabb()};
@@ -45,34 +42,6 @@ namespace c3d{
             return left_hit->distance<right_hit->distance?left_hit:right_hit;
         }
         [[nodiscard]] aabb get_aabb()const override{
-            return aabb_;
-        }
-    };
-    class sphere final:public hittable{
-    public:
-        vector center,movement;
-        float radius;
-        std::shared_ptr<material> material_;
-        [[nodiscard]] std::shared_ptr<hit_record> hit(const ray &ray_,const interval &interval_)const override{
-            const vector c=center+movement*ray_.time,co=ray_.origin-c;
-            const float b=ray_.direction*co,d=b*b-self_dot(co)+radius*radius;
-            if(d<0)
-                return nullptr;
-            const float sd=std::sqrt(d);
-            float t=-b-sd;
-            if(!interval_.contain(t)){
-                t+=sd*2;
-                if(!interval_.contain(t))
-                    return nullptr;
-            }
-            const vector p=ray_.at(t);
-            return std::make_shared<hit_record>(hit_record{p,unit(p-c),t,(std::atan2(-p.z,p.x)+PI)/(2*PI),std::acos(-p.y)/PI,material_});
-        }
-        [[nodiscard]] aabb get_aabb()const override{
-            aabb aabb_(center,center+movement);
-            aabb_.x.expand(radius);
-            aabb_.y.expand(radius);
-            aabb_.z.expand(radius);
             return aabb_;
         }
     };
