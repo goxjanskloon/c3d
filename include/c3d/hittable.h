@@ -1,8 +1,8 @@
 #pragma once
 #include<c3d/aabb.h>
-#include<c3d/material.h>
 #include<c3d/vector.h>
 namespace c3d{
+    class material;
     struct hit_record{
         vector point,normal;
         float distance,u,v;

@@ -77,4 +77,8 @@ namespace c3d{
         const vector v{std::cos(l)*r,std::sin(l)*r,1-2*b};
         return v*n>0?v:-v;
     }
+    inline vector cosine_random_unit_vector(){
+        const float a=2*PI*random_float(),b=random_float(),c=std::sqrt(b);
+        return{std::cos(a)*c,std::sin(a)*c,std::sqrt(1-b)};
+    }
 }
