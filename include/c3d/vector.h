@@ -7,6 +7,7 @@ namespace c3d{
         void rotate(const vector &origin,const vector &axis,float a);
         void rotate(const vector &axis,float a);
         void unitize();
+        void legalize();
     };
     inline vector operator+(const vector &a,const vector &b){
         return{a.x+b.x,a.y+b.y,a.z+b.z};
@@ -47,6 +48,9 @@ namespace c3d{
     inline vector unit(const vector &v){
         return v/norm(v);
     }
+    inline vector legal(const vector &v){
+        return{std::isnormal(v.x)?v.x:0.f,std::isnormal(v.y)?v.y:0.f,std::isnormal(v.z)?v.z:0.f};
+    }
     inline vector rotate(const vector &v,const vector &axis,const float a){
         const float c=std::cos(a);return v*c+axis*(1-c)*(v*axis)+(v&axis)*std::sin(a);
     }
@@ -68,6 +72,11 @@ namespace c3d{
     inline void vector::unitize(){
         *this/=norm(*this);
     }
+    inline void vector::legalize(){
+        if(x!=0.f&&!std::isnormal(x)) x=0.f;
+        if(y!=0.f&&!std::isnormal(y)) y=0.f;
+        if(z!=0.f&&!std::isnormal(z)) z=0.f;
+    }
     inline vector random_unit_vector(){
         const float b=random_unit_float(),r=std::sqrt(b*(b-1))*2,l=2*PI*random_unit_float();
         return{std::cos(l)*r,std::sin(l)*r,1-2*b};
@@ -78,7 +87,7 @@ namespace c3d{
         return v*n>0?v:-v;
     }
     inline vector cosine_random_unit_vector(){
-        const float a=2*PI*random_float(),b=random_float(),c=std::sqrt(b);
-        return{std::cos(a)*c,std::sin(a)*c,std::sqrt(1-b)};
+        const float a=2*PI*random_float(),b=random_float();
+        return{std::cos(a)*b,std::sin(a)*b,std::sqrt(1-b*b)};
     }
 }
